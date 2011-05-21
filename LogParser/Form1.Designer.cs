@@ -61,6 +61,7 @@
             this.uploadButton.TabIndex = 2;
             this.uploadButton.Text = "Upload!";
             this.uploadButton.UseVisualStyleBackColor = true;
+            this.uploadButton.Click += new System.EventHandler(this.uploadButton_Click);
             // 
             // uploadProgress
             // 
