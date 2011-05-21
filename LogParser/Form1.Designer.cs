@@ -30,6 +30,8 @@
         {
             this.txt_fileDir = new System.Windows.Forms.TextBox();
             this.fileBrowseButton = new System.Windows.Forms.Button();
+            this.uploadButton = new System.Windows.Forms.Button();
+            this.uploadProgress = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
             // 
             // txt_fileDir
@@ -51,11 +53,31 @@
             this.fileBrowseButton.UseVisualStyleBackColor = true;
             this.fileBrowseButton.Click += new System.EventHandler(this.fileBrowseButton_Click);
             // 
+            // uploadButton
+            // 
+            this.uploadButton.Location = new System.Drawing.Point(157, 79);
+            this.uploadButton.Name = "uploadButton";
+            this.uploadButton.Size = new System.Drawing.Size(120, 35);
+            this.uploadButton.TabIndex = 2;
+            this.uploadButton.Text = "Upload!";
+            this.uploadButton.UseVisualStyleBackColor = true;
+            // 
+            // uploadProgress
+            // 
+            this.uploadProgress.Location = new System.Drawing.Point(12, 128);
+            this.uploadProgress.Name = "uploadProgress";
+            this.uploadProgress.Size = new System.Drawing.Size(410, 22);
+            this.uploadProgress.Step = 1;
+            this.uploadProgress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.uploadProgress.TabIndex = 3;
+            // 
             // riftParser
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(434, 162);
+            this.Controls.Add(this.uploadProgress);
+            this.Controls.Add(this.uploadButton);
             this.Controls.Add(this.fileBrowseButton);
             this.Controls.Add(this.txt_fileDir);
             this.Name = "riftParser";
@@ -69,6 +91,8 @@
 
         private System.Windows.Forms.TextBox txt_fileDir;
         private System.Windows.Forms.Button fileBrowseButton;
+        private System.Windows.Forms.Button uploadButton;
+        private System.Windows.Forms.ProgressBar uploadProgress;
     }
 }
 

@@ -22,6 +22,7 @@ namespace LogParser
             ofd.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             ofd.FilterIndex = 1;
             ofd.Multiselect = false;
+            ofd.AddExtension = true;
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 txt_fileDir.Text = ofd.FileName;
