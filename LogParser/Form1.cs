@@ -9,11 +9,24 @@ using System.Windows.Forms;
 
 namespace LogParser
 {
-    public partial class Form1 : Form
+    public partial class riftParser : Form
     {
-        public Form1()
+        public riftParser()
         {
             InitializeComponent();
+        }
+
+        private void fileBrowseButton_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            ofd.FilterIndex = 1;
+            ofd.Multiselect = false;
+            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                txt_fileDir.Text = ofd.FileName;
+            }
+
         }
     }
 }
