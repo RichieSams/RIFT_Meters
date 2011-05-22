@@ -55,7 +55,7 @@
             // 
             // uploadButton
             // 
-            this.uploadButton.Location = new System.Drawing.Point(157, 79);
+            this.uploadButton.Location = new System.Drawing.Point(157, 76);
             this.uploadButton.Name = "uploadButton";
             this.uploadButton.Size = new System.Drawing.Size(120, 35);
             this.uploadButton.TabIndex = 2;
@@ -65,7 +65,7 @@
             // 
             // uploadProgress
             // 
-            this.uploadProgress.Location = new System.Drawing.Point(12, 128);
+            this.uploadProgress.Location = new System.Drawing.Point(12, 131);
             this.uploadProgress.Name = "uploadProgress";
             this.uploadProgress.Size = new System.Drawing.Size(410, 22);
             this.uploadProgress.Step = 1;
