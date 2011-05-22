@@ -56,9 +56,7 @@ namespace LogParser
 
             // Set up transaction
             MySqlCommand command = connection.CreateCommand();
-            MySqlTransaction trans = connection.BeginTransaction();
             command.Connection = connection;
-            command.Transaction = trans;
 
             try
             {
@@ -72,23 +70,23 @@ namespace LogParser
                     // Only parse combat lines
                     if (line.IndexOf(")") > 0)
                     {
-                        // Data Values
-                        String SourceID = string.Empty;
+                        // Initiate the data containers
+                        String SourceID = "0";
                         String SourceName = string.Empty;
-                        String TargetID = string.Empty;
+                        String TargetID = "0";
                         String TargetName = string.Empty;
-                        String SourceOwnerID = string.Empty;
-                        String TargetOwnerID = string.Empty;
-                        String Amount = string.Empty;
-                        String TypeID = string.Empty;
-                        String SpellID = string.Empty;
+                        String SourceOwnerID = "0";
+                        String TargetOwnerID = "0";
+                        String Amount = "0";
+                        String TypeID = "0";
+                        String SpellID = "0";
                         String SpellName = string.Empty;
                         String Time = string.Empty;
                         String Element = string.Empty;
-                        String BlockedValue = string.Empty;
-                        String OverkillValue = string.Empty;
-                        String OverhealValue = string.Empty;
-                        String AbsorbedValue = string.Empty;
+                        String BlockedValue = "0";
+                        String OverkillValue = "0";
+                        String OverhealValue = "0";
+                        String AbsorbedValue = "0";
 
                         // Get time
                         Time = line.Substring(0, 8);
@@ -131,22 +129,22 @@ namespace LogParser
 
                                         switch (AddInfo[j + 1].Trim().ToLower())
                                         {
-                                            case "blocked":
-                                                BlockedValue = AddInfo[j];
-                                                
-                                                break;
-                                            case "overkill":
-                                                OverkillValue = AddInfo[j];
-                                                
-                                                break;
-                                            case "overheal":
-                                                OverhealValue = AddInfo[j];
-                                                
-                                                break;
                                             case "absorbed":
                                                 AbsorbedValue = AddInfo[j];
-                                                
                                                 break;
+
+                                            case "blocked":
+                                                BlockedValue = AddInfo[j];
+                                                break;
+
+                                            case "overheal":
+                                                OverhealValue = AddInfo[j];
+                                                break;
+
+                                            case "overkill":
+                                                OverkillValue = AddInfo[j];
+                                                break;
+                                            
                                         }
                                     }
                                 }
@@ -157,6 +155,10 @@ namespace LogParser
 
 
                         }
+
+                        command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal)" +
+                                                "VALUES ('0', '" + Time + "', '" + TypeID + "', '" + SourceID + "', '" + TargetID + "', '" + SpellID + "', '" + Amount + "', 'Air', '" + AbsorbedValue + "', '" + BlockedValue + "', '" + OverhealValue + "', '" + OverkillValue + "')";
+                        command.ExecuteNonQuery();
                     }
 
                     // Increment progress bar
@@ -171,9 +173,9 @@ namespace LogParser
                 return;
             }
 
-            // Commit the transaction and close the connection
-            //trans.Commit();
+            // Close the connection
             if (connection.State == ConnectionState.Open) connection.Close();
+            MessageBox.Show("Done!!");
 
         }
 
