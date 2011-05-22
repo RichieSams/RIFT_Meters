@@ -158,7 +158,7 @@ namespace LogParser
 
                         command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal)" +
                                                 "VALUES ('0', '" + Time + "', '" + TypeID + "', '" + SourceID + "', '" + TargetID + "', '" + SpellID + "', '" + Amount + "', 'Air', '" + AbsorbedValue + "', '" + BlockedValue + "', '" + OverhealValue + "', '" + OverkillValue + "')";
-                        command.ExecuteNonQuery();
+                        //command.ExecuteNonQuery();
                     }
 
                     // Increment progress bar
