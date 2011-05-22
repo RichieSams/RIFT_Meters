@@ -54,9 +54,13 @@ namespace LogParser
             // Open connection
             if (connection.State == ConnectionState.Closed) connection.Open();
 
-            // Set up transaction
+            // Set up query
             MySqlCommand command = connection.CreateCommand();
             command.Connection = connection;
+            command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal) VALUES ";
+
+            // Buffer count
+            int bufferInt = 0;
 
             try
             {
@@ -149,16 +153,17 @@ namespace LogParser
                                     }
                                 }
                             }
-
-
-
-
-
                         }
-
-                        command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal)" +
-                                                "VALUES ('0', '" + Time + "', '" + TypeID + "', '" + SourceID + "', '" + TargetID + "', '" + SpellID + "', '" + Amount + "', 'Air', '" + AbsorbedValue + "', '" + BlockedValue + "', '" + OverhealValue + "', '" + OverkillValue + "')";
-                        //command.ExecuteNonQuery();
+                        command.CommandText += "('0', '" + Time + "', '" + TypeID + "', '" + SourceID + "', '" + TargetID + "', '" + SpellID + "', '" + Amount + "', 'Air', '" + AbsorbedValue + "', '" + BlockedValue + "', '" + OverhealValue + "', '" + OverkillValue + "'), ";
+                        
+                        // Check for buffer full
+                        if (bufferInt++ == 500)
+                        {
+                            command.CommandText = command.CommandText.Substring(0, command.CommandText.Length - 2);
+                            command.ExecuteNonQuery();
+                            command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal) VALUES ";
+                            bufferInt = 0;
+                        }
                     }
 
                     // Increment progress bar
