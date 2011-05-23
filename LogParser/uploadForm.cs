@@ -50,23 +50,15 @@ namespace LogParser
             int lineCount = File.ReadLines(logDir).Count();
             uploadProgress.Value = 0;
             uploadProgress.Maximum = lineCount;
-            
-            // Open connection
-            if (connection.State == ConnectionState.Closed) connection.Open();
-
-            // Set up query
-            MySqlCommand command = connection.CreateCommand();
-            command.Connection = connection;
-            command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal) VALUES ";
-
-            // Buffer count
-            int bufferInt = 0;
 
             try
             {
-                // Open file
+                // Open combat log file
                 FileStream fs = new FileStream(logDir, FileMode.Open, FileAccess.Read);
                 StreamReader reader = new StreamReader(fs);
+
+                // Create csv file and the file writer
+                TextWriter writer = new StreamWriter("temp.csv");
 
                 String line = string.Empty;
                 while ((line = reader.ReadLine()) != null)
@@ -153,33 +145,38 @@ namespace LogParser
                                     }
                                 }
                             }
-                        }
-                        command.CommandText += "('0', '" + Time + "', '" + TypeID + "', '" + SourceID + "', '" + TargetID + "', '" + SpellID + "', '" + Amount + "', 'Air', '" + AbsorbedValue + "', '" + BlockedValue + "', '" + OverhealValue + "', '" + OverkillValue + "'), ";
-                        
-                        // Check for buffer full
-                        if (bufferInt++ == 500)
-                        {
-                            command.CommandText = command.CommandText.Substring(0, command.CommandText.Length - 2);
-                            command.ExecuteNonQuery();
-                            command.CommandText = "INSERT INTO raw_data (EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal) VALUES ";
-                            bufferInt = 0;
-                        }
+                            // Write the data to the csv file
+                            writer.WriteLine("0," + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + ",Air," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue);
+                        }    
                     }
 
                     // Increment progress bar
                     uploadProgress.PerformStep();
                     
                 }
+                // Close the csv file
+                writer.Close();
             }
             catch (IOException)
             {
                 MessageBox.Show("File does not exist or was entered incorrectly. Please enter a file or browse to it, then retry.", "Incorrect file");
-                if (connection.State == ConnectionState.Open) connection.Close();
                 return;
             }
+            // Open connection
+            if (connection.State == ConnectionState.Closed) connection.Open();
+
+            // Define and execute query
+            MySqlCommand command = new MySqlCommand("LOAD DATA INFILE 'temp.csv' " + 
+                                                        "INTO TABLE raw_data " + 
+                                                        "FIELDS TERMINATED BY ',' " + 
+                                                        "LINES TERMINATED BY '\\n' " +
+                                                        "(EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal)", 
+                                                        connection);
+            command.ExecuteNonQuery();
 
             // Close the connection
             if (connection.State == ConnectionState.Open) connection.Close();
+            
             MessageBox.Show("Done!!");
 
         }
