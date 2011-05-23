@@ -162,21 +162,7 @@ namespace LogParser
                 MessageBox.Show("File does not exist or was entered incorrectly. Please enter a file or browse to it, then retry.", "Incorrect file");
                 return;
             }
-            // Open connection
-            if (connection.State == ConnectionState.Closed) connection.Open();
-
-            // Define and execute query
-            MySqlCommand command = new MySqlCommand("LOAD DATA INFILE 'temp.csv' " + 
-                                                        "INTO TABLE raw_data " + 
-                                                        "FIELDS TERMINATED BY ',' " + 
-                                                        "LINES TERMINATED BY '\\n' " +
-                                                        "(EncNum, Time, Type, Source, Target, SpellID, Amount, Element, AbsorbedVal, BlockedVal, OverhealVal, OverkillVal)", 
-                                                        connection);
-            command.ExecuteNonQuery();
-
-            // Close the connection
-            if (connection.State == ConnectionState.Open) connection.Close();
-            
+                        
             MessageBox.Show("Done!!");
 
         }
