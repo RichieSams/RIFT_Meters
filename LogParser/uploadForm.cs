@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 using System.IO;
+using System.Net;
 
 namespace LogParser
 {
@@ -162,7 +163,43 @@ namespace LogParser
                 MessageBox.Show("File does not exist or was entered incorrectly. Please enter a file or browse to it, then retry.", "Incorrect file");
                 return;
             }
-                        
+
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.personaguild.com/rift_logs_uploads/temp.csv");
+            request.Method = WebRequestMethods.Ftp.UploadFile;
+
+            // Input credentials
+            request.Credentials = new NetworkCredential("persona", "ilike333"); // Need to change this to make it secure
+
+            // Set paramaters
+            request.UsePassive = true;
+            request.UseBinary = true;
+            request.KeepAlive = true;
+            request.ReadWriteTimeout = 10000000;
+
+            // Upload
+            FileStream ftpFs = File.OpenRead("temp.csv");
+            byte[] buffer = new byte[ftpFs.Length];
+            ftpFs.Read(buffer, 0, buffer.Length);
+            ftpFs.Close();
+            Stream ftpstream = request.GetRequestStream();
+            int bufferPart = 0;
+            int bufferLength = buffer.Length;
+            while (bufferPart < bufferLength)
+            {
+                if ((bufferLength - bufferPart) >= 5000) // Need to fiddle with this to minimize time, but prevent the server from cutting the connection
+                {
+                    ftpstream.Write(buffer, bufferPart, 5000);
+                }
+                else
+                {
+                    ftpstream.Write(buffer, bufferPart, bufferLength - bufferPart);
+                }
+                bufferPart += 5000;
+            }
+            ftpstream.Close();
+
+
+
             MessageBox.Show("Done!!");
 
         }
