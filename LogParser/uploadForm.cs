@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 using System.IO;
+using System.Net;
 
 namespace LogParser
 {
@@ -41,15 +42,23 @@ namespace LogParser
             // Save directory so as to prevent errors if the user manages to change the text while the parsing is running
             String logDir = txt_fileDir.Text;
 
-            // Create connections. Will need to change this to prevent security loss from someone decompiling
-            // However I want something more elegant that just creating more and more users for the table. That will get tedious for us to moderate.
-            String genConString = "server=personaguild.com; User Id=persona_admin; database=persona_RIFT_logs; Password=ilike333";
-            connection = new MySqlConnection(genConString);
+            // Turn on the status text
+            lbl_statusTxt.Show();
 
-            // Set up progress bar
+            // Start work
+            uploadBackgroundWorker.RunWorkerAsync(logDir);
+
+
+
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            String logDir = (String)e.Argument;
+            double progress = 0;
             int lineCount = File.ReadLines(logDir).Count();
-            uploadProgress.Value = 0;
-            uploadProgress.Maximum = lineCount;
+
+            #region Parsing
 
             try
             {
@@ -99,7 +108,7 @@ namespace LogParser
                         }
 
                         // Only parse relevant combat lines
-                        if (((int.Parse(CodeList[0]) >= 3) &&  (int.Parse(CodeList[0]) <= 23)) || (int.Parse(CodeList[0]) == 27) || (int.Parse(CodeList[0]) == 28))
+                        if (((int.Parse(CodeList[0]) >= 3) && (int.Parse(CodeList[0]) <= 23)) || (int.Parse(CodeList[0]) == 27) || (int.Parse(CodeList[0]) == 28))
                         {
                             // Set ID's and names
                             TypeID = CodeList[0];
@@ -140,19 +149,19 @@ namespace LogParser
                                             case "overkill":
                                                 OverkillValue = AddInfo[j];
                                                 break;
-                                            
+
                                         }
                                     }
                                 }
                             }
                             // Write the data to the csv file
+
                             writer.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue);
                         }    
                     }
 
-                    // Increment progress bar
-                    uploadProgress.PerformStep();
-                    
+                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 50));
+
                 }
                 // Close the csv file
                 writer.Close();
@@ -162,11 +171,83 @@ namespace LogParser
                 MessageBox.Show("File does not exist or was entered incorrectly. Please enter a file or browse to it, then retry.", "Incorrect file");
                 return;
             }
-                        
-            MessageBox.Show("Done!!");
+
+            #endregion // Parsing region
+
+            #region FTP
+
+            // Reset progress counter
+            progress = 0;
+
+            // Create ftp object
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.personaguild.com/rift_logs_uploads/temp.csv");
+            request.Method = WebRequestMethods.Ftp.UploadFile;
+
+            // Input credentials
+            request.Credentials = new NetworkCredential("persona", "ilike333"); // Need to change this to make it secure
+
+            // Set paramaters
+            request.UsePassive = true;
+            request.UseBinary = true;
+            request.KeepAlive = true;
+            request.ReadWriteTimeout = 10000000;
+
+            // Read the file to a buffer
+            FileStream ftpFs = File.OpenRead("temp.csv");
+            byte[] buffer = new byte[ftpFs.Length];
+            ftpFs.Read(buffer, 0, buffer.Length);
+            ftpFs.Close();
+
+            // Stream chunks of the buffer to ftp
+            Stream ftpstream = request.GetRequestStream();
+            int bufferPart = 0;
+            int bufferLength = buffer.Length;
+            double numChunks = Math.Ceiling((double)bufferLength / 200000);
+            while (bufferPart < bufferLength)
+            {
+                if ((bufferLength - bufferPart) >= 200000) // Need to fiddle with this to minimize time, but prevent the server from cutting the connection
+                {
+                    ftpstream.Write(buffer, bufferPart, 200000);
+                }
+                else
+                {
+                    ftpstream.Write(buffer, bufferPart, bufferLength - bufferPart);
+                }
+                bufferPart += 200000;
+
+                uploadBackgroundWorker.ReportProgress((int)(50 + ((++progress / numChunks) * 50)));
+            }
+            ftpstream.Close();
+
+            #endregion // FTP region
+
+            // Final report
+            //uploadBackgroundWorker.ReportProgress(100);
 
         }
 
+        private void uploadBackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            if (e.ProgressPercentage != uploadProgress.Value)
+            {
+                uploadProgress.Value = e.ProgressPercentage;
+
+                if (e.ProgressPercentage < 50)
+                {
+                    lbl_statusTxt.Text = "Parsing combat log - " + e.ProgressPercentage + "%";
+                }
+                else
+                {
+                    lbl_statusTxt.Text = "Uploading data - " + ((e.ProgressPercentage - 50) * 2) + "% (This can take some time)";
+                }
+            }           
+        }
+
+        private void uploadBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            lbl_statusTxt.Text = "Done";
+            MessageBox.Show("Done!!");
+        }
 
     }
 }
