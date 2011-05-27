@@ -67,22 +67,22 @@ namespace LogParser
                     if (line.IndexOf(")") > 0)
                     {
                         // Initiate the data containers
-                        String SourceID = "0";
-                        String SourceName = string.Empty;
-                        String TargetID = "0";
-                        String TargetName = string.Empty;
-                        String SourceOwnerID = "0";
-                        String TargetOwnerID = "0";
-                        String Amount = "0";
-                        String TypeID = "0";
-                        String SpellID = "0";
-                        String SpellName = string.Empty;
-                        String Time = string.Empty;
-                        String Element = string.Empty;
-                        String BlockedValue = "0";
-                        String OverkillValue = "0";
-                        String OverhealValue = "0";
-                        String AbsorbedValue = "0";
+                        String SourceID = "\\N";
+                        String SourceName = "\\N";
+                        String TargetID = "\\N";
+                        String TargetName = "\\N";
+                        String SourceOwnerID = "\\N";
+                        String TargetOwnerID = "\\N";
+                        String Amount = "\\N";
+                        String TypeID = "\\N";
+                        String SpellID = "\\N";
+                        String SpellName = "\\N";
+                        String Time = "\\N";
+                        String Element = "\\N";
+                        String BlockedValue = "\\N";
+                        String OverkillValue = "\\N";
+                        String OverhealValue = "\\N";
+                        String AbsorbedValue = "\\N";
 
                         // Get time
                         Time = line.Substring(0, 8);
@@ -146,7 +146,7 @@ namespace LogParser
                                 }
                             }
                             // Write the data to the csv file
-                            writer.WriteLine("0," + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + ",Air," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue);
+                            writer.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue);
                         }    
                     }
 
