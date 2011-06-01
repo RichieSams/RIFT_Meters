@@ -9,14 +9,29 @@ using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 using System.IO;
 using System.Net;
+using System.Text.RegularExpressions;
+using ICSharpCode.SharpZipLib.BZip2;
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Zip;
+using System.Security.Cryptography;
+using System.Collections.Specialized;
 
 namespace LogParser
 {
     public partial class riftParser : Form
     {
-        // MySQL connection
-        MySqlConnection connection;
 
+        // Spell Dictionary
+        Dictionary<string, string> spellDict;
+
+        // Entity Dictionary
+        struct entityDef {
+            public string id;
+            public string name;
+        }
+        Dictionary<string, entityDef> entityDict;
+        
 
         public riftParser()
         {
@@ -47,9 +62,6 @@ namespace LogParser
 
             // Start work
             uploadBackgroundWorker.RunWorkerAsync(logDir);
-
-
-
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -57,6 +69,8 @@ namespace LogParser
             String logDir = (String)e.Argument;
             double progress = 0;
             int lineCount = File.ReadLines(logDir).Count();
+            spellDict = new Dictionary<string, string>();
+            entityDict = new Dictionary<string, entityDef>();
 
             #region Parsing
 
@@ -67,35 +81,41 @@ namespace LogParser
                 StreamReader reader = new StreamReader(fs);
 
                 // Create csv file and the file writer
-                TextWriter writer = new StreamWriter("temp.csv");
+                TextWriter dataWriter = new StreamWriter("data.csv");
+                String startTime = null;
 
                 String line = string.Empty;
                 while ((line = reader.ReadLine()) != null)
                 {
+                    // Initiate the data containers
+                    String SourceID = "\\N";
+                    String SourceName = "\\N";
+                    String TargetID = "\\N";
+                    String TargetName = "\\N";
+                    String SourceOwnerID = "\\N";
+                    String TargetOwnerID = "\\N";
+                    String Amount = "\\N";
+                    String TypeID = "\\N";
+                    String SpellID = "\\N";
+                    String SpellName = "\\N";
+                    String Time = "\\N";
+                    String Element = "\\N";
+                    String BlockedValue = "\\N";
+                    String OverkillValue = "\\N";
+                    String OverhealValue = "\\N";
+                    String AbsorbedValue = "\\N";
+
+                    // Get time
+                    Time = line.Substring(0, 8);
+                    if (startTime == null)
+                    {
+                        startTime = Time;
+                        dataWriter.WriteLine(startTime);
+                    }
+
                     // Only parse combat lines
                     if (line.IndexOf(")") > 0)
                     {
-                        // Initiate the data containers
-                        String SourceID = "\\N";
-                        String SourceName = "\\N";
-                        String TargetID = "\\N";
-                        String TargetName = "\\N";
-                        String SourceOwnerID = "\\N";
-                        String TargetOwnerID = "\\N";
-                        String Amount = "\\N";
-                        String TypeID = "\\N";
-                        String SpellID = "\\N";
-                        String SpellName = "\\N";
-                        String Time = "\\N";
-                        String Element = "\\N";
-                        String BlockedValue = "\\N";
-                        String OverkillValue = "\\N";
-                        String OverhealValue = "\\N";
-                        String AbsorbedValue = "\\N";
-
-                        // Get time
-                        Time = line.Substring(0, 8);
-
                         // Break into code and words
                         string CodeStr = line.Substring(11, line.IndexOf(")") - 1);
                         string LogStr = line.Substring(line.IndexOf(")") + 1, line.Length - (line.IndexOf(")") + 1));
@@ -108,20 +128,64 @@ namespace LogParser
                         }
 
                         // Only parse relevant combat lines
-                        if (((int.Parse(CodeList[0]) >= 3) && (int.Parse(CodeList[0]) <= 23)) || (int.Parse(CodeList[0]) == 27) || (int.Parse(CodeList[0]) == 28))
+                        if (((int.Parse(CodeList[0]) >= 1) && (int.Parse(CodeList[0]) <= 23)) || ((int.Parse(CodeList[0]) >= 26) && (int.Parse(CodeList[0]) <= 28)))
                         {
                             // Set ID's and names
+                            string s;
                             TypeID = CodeList[0];
                             SourceID = CodeList[1].Split('#')[2];
-                            TargetID = CodeList[2].Split('#')[2];
-                            SourceOwnerID = CodeList[3].Split('#')[2];
-                            TargetOwnerID = CodeList[4].Split('#')[2];
+                            if (!((s = CodeList[2].Split('#')[2]).Equals("0"))) TargetID = s;
+                            if (!((s = CodeList[3].Split('#')[2]).Equals("0"))) SourceOwnerID = s;
+                            if (!((s = CodeList[4].Split('#')[2]).Equals("0"))) TargetOwnerID = s;
                             SourceName = CodeList[5];
-                            TargetName = CodeList[6];
-                            Amount = CodeList[7];
-                            SpellID = CodeList[8];
-                            SpellName = CodeList[9];
+                            if (!((s = CodeList[6]).Equals("Unknown")))
+                            {
+                                TargetName = s;
+                            } 
+                            if (((int.Parse(CodeList[0]) >= 3) && (int.Parse(CodeList[0]) <= 5)) || (int.Parse(CodeList[0]) == 14) || (int.Parse(CodeList[0]) == 23) || ((int.Parse(CodeList[0]) >= 27) && (int.Parse(CodeList[0]) <= 28)))
+                                Amount = CodeList[7];
+                            if (!((s = CodeList[8]).Equals("0")))
+                            {
+                                SpellID = s;
+                                SpellName = CodeList[9].Split(')')[0].Trim();
+                                // Generate Spell Dict
+                                if (!spellDict.ContainsKey(SpellID) && !SpellName.Equals(""))
+                                    spellDict.Add(SpellID, SpellName);
+                            }
 
+                            // Get Element
+                            Regex r = new Regex("\\d (\\w+) damage");
+                            Match m = r.Match(LogStr);
+                            if (m.Success)
+                            {
+                                GroupCollection g = m.Groups;
+                                Element = g[1].Captures[0].Value;
+                            }
+
+                            // Generate Entity
+                            if (!entityDict.ContainsKey(SourceID))
+                            {
+                                entityDef ent = new entityDef();
+                                if (!SourceOwnerID.Equals("\\N"))
+                                    ent.id = SourceOwnerID;
+                                else
+                                    ent.id = null;
+                                ent.name = SourceName;
+                                entityDict.Add(SourceID, ent);
+                            }
+                            if (!TargetID.Equals("\\N"))
+                            {
+                                if (!entityDict.ContainsKey(TargetID))
+                                {
+                                    entityDef ent = new entityDef();
+                                    if (!TargetOwnerID.Equals("\\N"))
+                                        ent.id = TargetOwnerID;
+                                    else
+                                        ent.id = null;
+                                    ent.name = TargetName;
+                                    entityDict.Add(TargetID, ent);
+                                }
+                            }
                             // Check for special cases
                             if (LogStr.IndexOf("(") != -1)
                             {
@@ -137,34 +201,40 @@ namespace LogParser
                                             case "absorbed":
                                                 AbsorbedValue = AddInfo[j];
                                                 break;
-
                                             case "blocked":
                                                 BlockedValue = AddInfo[j];
                                                 break;
-
                                             case "overheal":
                                                 OverhealValue = AddInfo[j];
                                                 break;
-
                                             case "overkill":
                                                 OverkillValue = AddInfo[j];
                                                 break;
-
                                         }
                                     }
                                 }
                             }
                             // Write the data to the csv file
 
-                            writer.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue);
-                        }    
+                            dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                        }
+                    }
+                    else if (line.Contains("Combat Begin"))
+                    {
+                        TypeID = "29";
+                        dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                    }
+                    else if (line.Contains("Combat End"))
+                    {
+                        TypeID = "30";
+                        dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
                     }
 
                     uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 50));
 
                 }
                 // Close the csv file
-                writer.Close();
+                dataWriter.Close();
             }
             catch (IOException)
             {
@@ -172,7 +242,125 @@ namespace LogParser
                 return;
             }
 
+            try
+            {
+                TextWriter spellWriter = new StreamWriter("spell.csv");
+
+                foreach (KeyValuePair<string, string> kvp in spellDict) {
+                    spellWriter.WriteLine(kvp.Key + "," + kvp.Value + ",");
+                }
+
+                spellWriter.Close();
+            }
+            catch (IOException)
+            {
+
+            }
+
+            try
+            {
+                TextWriter entityWriter = new StreamWriter("entity.csv");
+
+                string s = string.Empty;
+
+                foreach (KeyValuePair<string, entityDef> kvp in entityDict)
+                {
+                    string owner = "\\N";
+                    if (kvp.Value.id != null) owner = kvp.Value.id;
+                    entityWriter.WriteLine(kvp.Key + "," + owner + "," + kvp.Value.name + ",");
+                }
+
+                entityWriter.Close();
+            }
+            catch (IOException)
+            {
+
+            }
+
+
+
             #endregion // Parsing region
+
+            #region Compression
+
+            string fnOut = @"temp.zip";
+            ZipOutputStream zipStream = new ZipOutputStream(File.Create(fnOut));
+            zipStream.SetLevel(9); //0-9, 9 being the highest level of compression
+            //zipStream.Password = "ok";
+
+            string[] files = { @"data.csv", @"spell.csv", @"entity.csv" };
+            foreach (string inputFn in files)
+            {
+                FileInfo fi = new FileInfo(inputFn);
+                string entryName = ZipEntry.CleanName(inputFn);
+                ZipEntry newEntry = new ZipEntry(entryName);
+
+                zipStream.UseZip64 = UseZip64.Off;
+                newEntry.Size = fi.Length;
+
+                zipStream.PutNextEntry(newEntry);
+                byte[] buff = new byte[4096];
+                using (FileStream streamReader = File.OpenRead(inputFn))
+                {
+                    StreamUtils.Copy(streamReader, zipStream, buff);
+                }
+                zipStream.CloseEntry();
+            }
+            zipStream.IsStreamOwner = true;	// Makes the Close also Close the underlying stream
+            zipStream.Close();
+
+            #endregion // Compression
+
+            #region MD5Hash
+
+            FileStream file = new FileStream(@"temp.zip", FileMode.Open);
+            MD5 md5 = new MD5CryptoServiceProvider();
+            byte[] retVal = md5.ComputeHash(file);
+            file.Close();
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < retVal.Length; i++)
+            {
+                sb.Append(retVal[i].ToString("x2"));
+            }
+            string md5hash = sb.ToString();
+
+            #endregion
+
+            #region PHP Upload
+
+            WebClient Client = new WebClient();
+            Client.Headers.Add("Content-Type", "binary/octet-stream");
+
+            byte[] result = Client.UploadFile("http://personaguild.com/test/upload.php", "POST", "temp.zip");
+            string k = Encoding.UTF8.GetString(result, 0, result.Length);
+
+            // File was corrupted during upload
+            if (!md5hash.Equals(k))
+                return;
+
+            #endregion // PHP Upload
+
+            #region Decompress
+
+            Client.Headers.Remove("Content-Type");
+            NameValueCollection nvcDecompress = new NameValueCollection();
+            nvcDecompress.Add("file", md5hash);
+
+            result = Client.UploadValues("http://personaguild.com/test/decompress.php", nvcDecompress);
+            k = Encoding.UTF8.GetString(result, 0, result.Length);
+
+            #endregion // Decompress
+
+            #region Insert
+
+            result = Client.UploadValues("http://personaguild.com/test/insert.php", nvcDecompress);
+            k = Encoding.UTF8.GetString(result, 0, result.Length);
+
+            #endregion // Insert
+
+            uploadBackgroundWorker.ReportProgress(100);
+            return;
 
             #region FTP
 
