@@ -105,12 +105,15 @@ namespace LogParser
                     String OverhealValue = "\\N";
                     String AbsorbedValue = "\\N";
 
-                    // Get time
-                    Time = line.Substring(0, 8);
-                    if (startTime == null)
+                    if (line != "")
                     {
-                        startTime = Time;
-                        dataWriter.WriteLine(startTime);
+                        // Get time
+                        Time = line.Substring(0, 8);
+                        if (startTime == null)
+                        {
+                            startTime = Time;
+                            dataWriter.WriteLine(startTime);
+                        }
                     }
 
                     // Only parse combat lines
@@ -246,7 +249,8 @@ namespace LogParser
             {
                 TextWriter spellWriter = new StreamWriter("spell.csv");
 
-                foreach (KeyValuePair<string, string> kvp in spellDict) {
+                foreach (KeyValuePair<string, string> kvp in spellDict) 
+                {
                     spellWriter.WriteLine(kvp.Key + "," + kvp.Value + ",");
                 }
 
@@ -361,56 +365,6 @@ namespace LogParser
 
             uploadBackgroundWorker.ReportProgress(100);
             return;
-
-            #region FTP
-
-            // Reset progress counter
-            progress = 0;
-
-            // Create ftp object
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.personaguild.com/rift_logs_uploads/temp.csv");
-            request.Method = WebRequestMethods.Ftp.UploadFile;
-
-            // Input credentials
-            request.Credentials = new NetworkCredential("persona", "ilike333"); // Need to change this to make it secure
-
-            // Set paramaters
-            request.UsePassive = true;
-            request.UseBinary = true;
-            request.KeepAlive = true;
-            request.ReadWriteTimeout = 10000000;
-
-            // Read the file to a buffer
-            FileStream ftpFs = File.OpenRead("temp.csv");
-            byte[] buffer = new byte[ftpFs.Length];
-            ftpFs.Read(buffer, 0, buffer.Length);
-            ftpFs.Close();
-
-            // Stream chunks of the buffer to ftp
-            Stream ftpstream = request.GetRequestStream();
-            int bufferPart = 0;
-            int bufferLength = buffer.Length;
-            double numChunks = Math.Ceiling((double)bufferLength / 200000);
-            while (bufferPart < bufferLength)
-            {
-                if ((bufferLength - bufferPart) >= 200000) // Need to fiddle with this to minimize time, but prevent the server from cutting the connection
-                {
-                    ftpstream.Write(buffer, bufferPart, 200000);
-                }
-                else
-                {
-                    ftpstream.Write(buffer, bufferPart, bufferLength - bufferPart);
-                }
-                bufferPart += 200000;
-
-                uploadBackgroundWorker.ReportProgress((int)(50 + ((++progress / numChunks) * 50)));
-            }
-            ftpstream.Close();
-
-            #endregion // FTP region
-
-            // Final report
-            //uploadBackgroundWorker.ReportProgress(100);
 
         }
 

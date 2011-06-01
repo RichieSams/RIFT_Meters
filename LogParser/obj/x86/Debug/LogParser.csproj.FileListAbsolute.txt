@@ -7,3 +7,4 @@ C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\GenerateResource.read.1.tlog
 C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\GenerateResource.write.1.tlog
 C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.exe
 C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.pdb
+C:\Users\Adrian\RIFT_Meters\LogParser\bin\Debug\ICSharpCode.SharpZipLib.dll
