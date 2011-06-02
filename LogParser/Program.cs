@@ -15,7 +15,7 @@ namespace LogParser
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new riftParser());
+            Application.Run(new riftLogsUploader());
         }
     }
 }

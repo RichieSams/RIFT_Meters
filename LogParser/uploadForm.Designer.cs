@@ -1,6 +1,6 @@
 ﻿namespace LogParser
 {
-    partial class riftParser
+    partial class riftLogsUploader
     {
         /// <summary>
         /// Required designer variable.
@@ -92,7 +92,7 @@
             this.lbl_statusTxt.Text = "Parsing combat log";
             this.lbl_statusTxt.Visible = false;
             // 
-            // riftParser
+            // riftLogsUploader
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -102,8 +102,8 @@
             this.Controls.Add(this.uploadButton);
             this.Controls.Add(this.fileBrowseButton);
             this.Controls.Add(this.txt_fileDir);
-            this.Name = "riftParser";
-            this.Text = "RIFT Logs Parser";
+            this.Name = "riftLogsUploader";
+            this.Text = "RIFT Logs Uploader";
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -19,7 +19,7 @@ using System.Collections.Specialized;
 
 namespace LogParser
 {
-    public partial class riftParser : Form
+    public partial class riftLogsUploader : Form
     {
 
         // Spell Dictionary
@@ -33,7 +33,7 @@ namespace LogParser
         Dictionary<string, entityDef> entityDict;
         
 
-        public riftParser()
+        public riftLogsUploader()
         {
             InitializeComponent();
         }
@@ -233,7 +233,7 @@ namespace LogParser
                         dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
                     }
 
-                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 50));
+                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 20));
 
                 }
                 // Close the csv file
@@ -329,6 +329,9 @@ namespace LogParser
             }
             string md5hash = sb.ToString();
 
+            // Update progress
+            uploadBackgroundWorker.ReportProgress(40);
+
             #endregion
 
             #region PHP Upload
@@ -336,12 +339,18 @@ namespace LogParser
             WebClient Client = new WebClient();
             Client.Headers.Add("Content-Type", "binary/octet-stream");
 
-            byte[] result = Client.UploadFile("http://personaguild.com/test/upload.php", "POST", "temp.zip");
+            byte[] result = Client.UploadFile("http://personaguild.com/publicRiftLogs/upload.php", "POST", "temp.zip");
             string k = Encoding.UTF8.GetString(result, 0, result.Length);
 
             // File was corrupted during upload
             if (!md5hash.Equals(k))
+            {
+                MessageBox.Show("File was corrupted during upload. Retry uploading", "File corrupted");
                 return;
+            }
+
+            // Update progress
+            uploadBackgroundWorker.ReportProgress(60);
 
             #endregion // PHP Upload
 
@@ -351,18 +360,22 @@ namespace LogParser
             NameValueCollection nvcDecompress = new NameValueCollection();
             nvcDecompress.Add("file", md5hash);
 
-            result = Client.UploadValues("http://personaguild.com/test/decompress.php", nvcDecompress);
+            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/decompress.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
+
+            // Update progress
+            uploadBackgroundWorker.ReportProgress(80);
 
             #endregion // Decompress
 
             #region Insert
 
-            result = Client.UploadValues("http://personaguild.com/test/insert.php", nvcDecompress);
+            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/insert.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
 
             #endregion // Insert
 
+            // Update progress
             uploadBackgroundWorker.ReportProgress(100);
             return;
 
@@ -374,13 +387,25 @@ namespace LogParser
             {
                 uploadProgress.Value = e.ProgressPercentage;
 
-                if (e.ProgressPercentage < 50)
+                if (e.ProgressPercentage < 20)
                 {
-                    lbl_statusTxt.Text = "Parsing combat log - " + e.ProgressPercentage + "%";
+                    lbl_statusTxt.Text = "Parsing combat log - " + e.ProgressPercentage*5 + "%";
+                }
+                else if (e.ProgressPercentage < 40)
+                {
+                    lbl_statusTxt.Text = "Compressing data";
+                }
+                else if (e.ProgressPercentage < 60)
+                {
+                    lbl_statusTxt.Text = "Uploading data (This can take some time)";
+                }
+                else if (e.ProgressPercentage < 80)
+                {
+                    lbl_statusTxt.Text = "Decompressing data";
                 }
                 else
                 {
-                    lbl_statusTxt.Text = "Uploading data - " + ((e.ProgressPercentage - 50) * 2) + "% (This can take some time)";
+                    lbl_statusTxt.Text = "Inserting data into the database";
                 }
             }           
         }
