@@ -144,7 +144,7 @@ namespace LogParser
                             if (!((s = CodeList[6]).Equals("Unknown")))
                             {
                                 TargetName = s;
-                            } 
+                            }
                             if (((int.Parse(CodeList[0]) >= 3) && (int.Parse(CodeList[0]) <= 5)) || (int.Parse(CodeList[0]) == 14) || (int.Parse(CodeList[0]) == 23) || ((int.Parse(CodeList[0]) >= 27) && (int.Parse(CodeList[0]) <= 28)))
                                 Amount = CodeList[7];
                             if (!((s = CodeList[8]).Equals("0")))
@@ -249,7 +249,7 @@ namespace LogParser
             {
                 TextWriter spellWriter = new StreamWriter("spell.csv");
 
-                foreach (KeyValuePair<string, string> kvp in spellDict) 
+                foreach (KeyValuePair<string, string> kvp in spellDict)
                 {
                     spellWriter.WriteLine(kvp.Key + "," + kvp.Value + ",");
                 }
@@ -281,7 +281,8 @@ namespace LogParser
 
             }
 
-
+            // Update progress
+            uploadBackgroundWorker.ReportProgress(20);
 
             #endregion // Parsing region
 
@@ -334,13 +335,62 @@ namespace LogParser
 
             #endregion
 
-            #region PHP Upload
+            #region FTP Upload
+
+            progress = 0;
+            // Create ftp object
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.personaguild.com/"+md5hash+".zip");
+            request.Method = WebRequestMethods.Ftp.UploadFile;
+
+            // Input credentials
+            request.Credentials = new NetworkCredential(Properties.Settings.Default.FTPAccount, Properties.Settings.Default.FTPPassword); // Need to change this to make it secure
+
+            // Set paramaters
+            request.UsePassive = true;
+            request.UseBinary = true;
+            request.KeepAlive = true;
+            request.ReadWriteTimeout = 10000000;
+
+            // Read the file to a buffer
+            FileStream ftpFs = File.OpenRead("temp.zip");
+            byte[] buffer = new byte[ftpFs.Length];
+            ftpFs.Read(buffer, 0, buffer.Length);
+            ftpFs.Close();
+
+            // Stream chunks of the buffer to ftp
+            Stream ftpstream = request.GetRequestStream();
+            int bufferPart = 0;
+            int bufferLength = buffer.Length;
+            int chunkSize = 102400;
+            double numChunks = Math.Ceiling((double)bufferLength / chunkSize);
+            while (bufferPart < bufferLength)
+            {
+                if ((bufferLength - bufferPart) >= chunkSize) // Need to fiddle with this to minimize time, but prevent the server from cutting the connection
+                {
+                    ftpstream.Write(buffer, bufferPart, chunkSize);
+                }
+                else
+                {
+                    ftpstream.Write(buffer, bufferPart, bufferLength - bufferPart);
+                }
+                bufferPart += chunkSize;
+
+                uploadBackgroundWorker.ReportProgress((int)(40 + ((++progress / numChunks) * 20)));
+            }
+            ftpstream.Close();
+
+            #endregion // FTP Upload
 
             WebClient Client = new WebClient();
-            Client.Headers.Add("Content-Type", "binary/octet-stream");
+            string k;
+            byte[] result;
+            NameValueCollection nvcDecompress = new NameValueCollection();
+            nvcDecompress.Add("file", md5hash);
 
-            byte[] result = Client.UploadFile("http://personaguild.com/publicRiftLogs/upload.php", "POST", "temp.zip");
-            string k = Encoding.UTF8.GetString(result, 0, result.Length);
+            #region Check File Integrity
+
+            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/check.php", nvcDecompress);
+            k = Encoding.UTF8.GetString(result, 0, result.Length);
 
             // File was corrupted during upload
             if (!md5hash.Equals(k))
@@ -349,16 +399,11 @@ namespace LogParser
                 return;
             }
 
-            // Update progress
-            uploadBackgroundWorker.ReportProgress(60);
-
-            #endregion // PHP Upload
+            #endregion // Check File Integrity
 
             #region Decompress
 
-            Client.Headers.Remove("Content-Type");
-            NameValueCollection nvcDecompress = new NameValueCollection();
-            nvcDecompress.Add("file", md5hash);
+            //Client.Headers.Remove("Content-Type");
 
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/decompress.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
