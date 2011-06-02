@@ -1,3 +1,6 @@
+//#define PARSE
+//#define COMPRESS
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -72,6 +75,7 @@ namespace LogParser
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
 
+#if PARSE
             #region Parsing
 
             try
@@ -285,7 +289,9 @@ namespace LogParser
             uploadBackgroundWorker.ReportProgress(20);
 
             #endregion // Parsing region
+#endif // PARSE
 
+#if COMPRESS
             #region Compression
 
             string fnOut = @"temp.zip";
@@ -315,6 +321,7 @@ namespace LogParser
             zipStream.Close();
 
             #endregion // Compression
+#endif // COMPRESS
 
             #region MD5Hash
 
@@ -386,7 +393,6 @@ namespace LogParser
             byte[] result;
             NameValueCollection nvcDecompress = new NameValueCollection();
             nvcDecompress.Add("file", md5hash);
-
             #region Check File Integrity
 
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/check.php", nvcDecompress);
@@ -414,6 +420,9 @@ namespace LogParser
             #endregion // Decompress
 
             #region Insert
+
+            string offset = (Convert.ToInt16((TimeZone.CurrentTimeZone).GetUtcOffset(DateTime.Now).ToString().Split(':')[0])).ToString();
+            nvcDecompress.Add("timezone", offset);
 
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/insert.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
