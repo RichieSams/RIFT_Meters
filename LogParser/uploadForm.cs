@@ -1,5 +1,5 @@
-//#define PARSE
-//#define COMPRESS
+#define PARSE
+#define COMPRESS
 
 using System;
 using System.Collections.Generic;
@@ -451,7 +451,7 @@ namespace LogParser
                 }
                 else if (e.ProgressPercentage < 60)
                 {
-                    lbl_statusTxt.Text = "Uploading data (This can take some time)";
+                    lbl_statusTxt.Text = "Uploading data - " + (e.ProgressPercentage - 40) * 5 + "% (This can take some time)";
                 }
                 else if (e.ProgressPercentage < 80)
                 {
