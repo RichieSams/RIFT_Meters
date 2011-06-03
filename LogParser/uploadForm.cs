@@ -24,6 +24,7 @@ namespace LogParser
 {
     public partial class riftLogsUploader : Form
     {
+        #region Variables
 
         // Spell Dictionary
         Dictionary<string, string> spellDict;
@@ -34,12 +35,39 @@ namespace LogParser
             public string name;
         }
         Dictionary<string, entityDef> entityDict;
-        
+
+        // Logged in bool
+        Boolean loggedIn = false;
+
+        #endregion // Variables
 
         public riftLogsUploader()
         {
             InitializeComponent();
         }
+
+        #region Log in
+
+        private void loginFunction()
+        {
+
+        }
+
+        private void txt_pass_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                loginFunction();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void loginButton_Click(object sender, EventArgs e)
+        {
+            loginFunction();
+        }
+
+        #endregion // Log in
 
         private void fileBrowseButton_Click(object sender, EventArgs e)
         {
@@ -57,14 +85,21 @@ namespace LogParser
 
         private void uploadButton_Click(object sender, EventArgs e)
         {
-            // Save directory so as to prevent errors if the user manages to change the text while the parsing is running
-            String logDir = txt_fileDir.Text;
+            if (loggedIn)
+            {
+                // Save directory so as to prevent errors if the user manages to change the text while the parsing is running
+                String logDir = txt_fileDir.Text;
 
-            // Turn on the status text
-            lbl_statusTxt.Show();
+                // Turn on the status text
+                lbl_statusTxt.Show();
 
-            // Start work
-            uploadBackgroundWorker.RunWorkerAsync(logDir);
+                // Start work
+                uploadBackgroundWorker.RunWorkerAsync(logDir);
+            }
+            else
+            {
+                MessageBox.Show("You must log in before uploading", "Not logged in");
+            }
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -427,13 +462,16 @@ namespace LogParser
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/insert.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
 
-            #endregion // Insert
-
             // Update progress
             uploadBackgroundWorker.ReportProgress(100);
+
+            #endregion // Insert
+
             return;
 
         }
+
+        #region Progress
 
         private void uploadBackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
@@ -469,6 +507,8 @@ namespace LogParser
             lbl_statusTxt.Text = "Done";
             MessageBox.Show("Done!!");
         }
+
+        #endregion // Progress
 
     }
 }
