@@ -19,6 +19,7 @@ using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Security.Cryptography;
 using System.Collections.Specialized;
+using System.Security.Cryptography;
 
 namespace LogParser
 {
@@ -39,6 +40,11 @@ namespace LogParser
         // Logged in bool
         Boolean loggedIn = false;
 
+        // WebClient
+        WebClient Client = new WebClient();
+        string k;
+        byte[] result;
+
         #endregion // Variables
 
         public riftLogsUploader()
@@ -50,7 +56,51 @@ namespace LogParser
 
         private void loginFunction()
         {
+            // Saving values of text boxes then clearing them
+            String username = txt_userName.Text;
+            String pass = txt_pass.Text;
+            txt_userName.Text = "";
+            txt_pass.Text = "";
 
+            // Hashing of password for security
+            MD5 md5 = new MD5CryptoServiceProvider();
+            byte[] interHash = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + txt_userName));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < interHash.Length; i++)
+            {
+                sb.Append(interHash[i].ToString("x2"));
+            }
+            string interStr = sb.ToString();
+            byte[] finalHash = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + interStr));
+            sb.Clear();
+            for (int i = 0; i < finalHash.Length; i++)
+            {
+                sb.Append(finalHash[i].ToString("x2"));
+            }
+            string passMD5 = sb.ToString();
+
+            // Set values to pass to php file
+            NameValueCollection nvcLoginInfo = new NameValueCollection();
+            nvcLoginInfo.Add("Username", username);
+            nvcLoginInfo.Add("Pass", passMD5);
+
+            // Call php
+            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/login.php", nvcLoginInfo);
+            k = Encoding.UTF8.GetString(result, 0, result.Length);
+
+            // Check echos
+            if (k == "true")
+            {
+                loggedIn = true;
+            }
+            else if (k == "false")
+            {
+                MessageBox.Show("Invalid login information", "Login failed");
+            }
+            else if (k == "FAILURE")
+            {
+                MessageBox.Show("login.php threw an error. Please contact an administrator with the circumstances that caused this error.", "PHP file error");
+            }
         }
 
         private void txt_pass_KeyDown(object sender, KeyEventArgs e)
@@ -423,9 +473,7 @@ namespace LogParser
 
             #endregion // FTP Upload
 
-            WebClient Client = new WebClient();
-            string k;
-            byte[] result;
+            
             NameValueCollection nvcDecompress = new NameValueCollection();
             nvcDecompress.Add("file", md5hash);
             #region Check File Integrity
