@@ -132,22 +132,60 @@ namespace LogParser
             if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 txt_fileDir.Text = ofd.FileName;
+                uploadButton.Focus();
             }
 
         }
 
         private void uploadButton_Click(object sender, EventArgs e)
         {
+            startWork();
+        }
+
+        private void txt_fileDir_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                startWork();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void startWork()
+        {
             if (loggedIn)
             {
-                // Save directory so as to prevent errors if the user manages to change the text while the parsing is running
-                String logDir = txt_fileDir.Text;
+                if (txt_fileDir.Text != "")
+                {
+                    // Save directory so as to prevent errors if the user manages to change the text while the parsing is running
+                    String logDir = txt_fileDir.Text;
 
-                // Turn on the status text
-                lbl_statusTxt.Show();
+                    // Prevent index errors on later file verification
+                    if (logDir.Length >= 4)
+                    {
+                        // File verification
+                        if (logDir.Substring(logDir.Length - 4) == ".txt")
+                        {
+                            // Turn on the status text
+                            lbl_statusTxt.Show();
 
-                // Start work
-                uploadBackgroundWorker.RunWorkerAsync(logDir);
+                            // Start work
+                            uploadBackgroundWorker.RunWorkerAsync(logDir);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Entry must be a .txt file. Please enter a valid file", "Incorrect file type");
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid entry", "Invalid Entry");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("No file specified", "No file");
+                }
             }
             else
             {

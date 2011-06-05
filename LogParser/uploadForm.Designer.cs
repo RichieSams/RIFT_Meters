@@ -49,6 +49,7 @@
             this.txt_fileDir.Name = "txt_fileDir";
             this.txt_fileDir.Size = new System.Drawing.Size(325, 23);
             this.txt_fileDir.TabIndex = 3;
+            this.txt_fileDir.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txt_fileDir_KeyDown);
             // 
             // fileBrowseButton
             // 
@@ -100,18 +101,18 @@
             // 
             // txt_userName
             // 
-            this.txt_userName.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_userName.Location = new System.Drawing.Point(68, 10);
+            this.txt_userName.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txt_userName.Location = new System.Drawing.Point(68, 9);
             this.txt_userName.Name = "txt_userName";
-            this.txt_userName.Size = new System.Drawing.Size(90, 18);
+            this.txt_userName.Size = new System.Drawing.Size(90, 20);
             this.txt_userName.TabIndex = 0;
             // 
             // txt_pass
             // 
-            this.txt_pass.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_pass.Location = new System.Drawing.Point(227, 10);
+            this.txt_pass.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txt_pass.Location = new System.Drawing.Point(227, 9);
             this.txt_pass.Name = "txt_pass";
-            this.txt_pass.Size = new System.Drawing.Size(90, 18);
+            this.txt_pass.Size = new System.Drawing.Size(90, 20);
             this.txt_pass.TabIndex = 1;
             this.txt_pass.UseSystemPasswordChar = true;
             this.txt_pass.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txt_pass_KeyDown);
