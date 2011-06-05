@@ -64,7 +64,7 @@ namespace LogParser
 
             // Hashing of password for security
             MD5 md5 = new MD5CryptoServiceProvider();
-            byte[] interHash = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + txt_userName));
+            byte[] interHash = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + username));
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < interHash.Length; i++)
             {
@@ -81,8 +81,8 @@ namespace LogParser
 
             // Set values to pass to php file
             NameValueCollection nvcLoginInfo = new NameValueCollection();
-            nvcLoginInfo.Add("Username", username);
-            nvcLoginInfo.Add("Pass", passMD5);
+            nvcLoginInfo.Add("username", username);
+            nvcLoginInfo.Add("pass", passMD5);
 
             // Call php
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/login.php", nvcLoginInfo);
@@ -92,6 +92,9 @@ namespace LogParser
             if (k == "true")
             {
                 loggedIn = true;
+                lbl_loggedIn.Text = "Logged in as " + username;
+                lbl_loggedIn.ForeColor = Color.Green;
+                txt_fileDir.Focus();
             }
             else if (k == "false")
             {
