@@ -19,7 +19,6 @@ using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Security.Cryptography;
 using System.Collections.Specialized;
-using System.Security.Cryptography;
 
 namespace LogParser
 {
@@ -89,20 +88,22 @@ namespace LogParser
             k = Encoding.UTF8.GetString(result, 0, result.Length);
 
             // Check echos
-            if (k == "true")
+            String[] returnArgs = k.Split(',');
+            switch (returnArgs[0])
             {
-                loggedIn = true;
-                lbl_loggedIn.Text = "Logged in as " + username;
-                lbl_loggedIn.ForeColor = Color.Green;
-                txt_fileDir.Focus();
-            }
-            else if (k == "false")
-            {
-                MessageBox.Show("Invalid login information", "Login failed");
-            }
-            else if (k == "FAILURE")
-            {
-                MessageBox.Show("login.php threw an error. Please contact an administrator with the circumstances that caused this error.", "PHP file error");
+                case "true":
+                    loggedIn = true;
+                    lbl_loggedIn.Text = "Logged in as " + username;
+                    lbl_loggedIn.ForeColor = Color.Green;
+                    txt_fileDir.Focus();
+                    break;
+                case "false":
+                    MessageBox.Show("Invalid login information", "Login failed");
+                    break;
+
+                case "FAILURE":
+                    MessageBox.Show("login.php threw an error. Please contact an administrator with the circumstances that caused this error.", "PHP file error");
+                    break;
             }
         }
 
