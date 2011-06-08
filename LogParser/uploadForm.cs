@@ -24,6 +24,11 @@ namespace LogParser
 {
     public partial class riftLogsUploader : Form
     {
+        public riftLogsUploader()
+        {
+            InitializeComponent();
+        }
+
         #region Variables
 
         // Spell Dictionary
@@ -46,11 +51,6 @@ namespace LogParser
         byte[] result;
 
         #endregion // Variables
-
-        public riftLogsUploader()
-        {
-            InitializeComponent();
-        }
 
         #region Log in
 
@@ -125,6 +125,8 @@ namespace LogParser
 
         #endregion // Log in
 
+        #region Layout
+
         private void fileBrowseButton_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
@@ -153,6 +155,10 @@ namespace LogParser
                 e.SuppressKeyPress = true;
             }
         }
+
+        #endregion // Layout
+
+        #region Start Work
 
         private void startWork()
         {
@@ -195,6 +201,10 @@ namespace LogParser
                 MessageBox.Show("You must log in before uploading", "Not logged in");
             }
         }
+
+        #endregion // Start Work
+
+        #region Work
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -563,6 +573,8 @@ namespace LogParser
             return;
 
         }
+
+        #endregion // Work
 
         #region Progress
 
