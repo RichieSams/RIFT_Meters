@@ -36,8 +36,9 @@ namespace LogParser
         }
         Dictionary<string, entityDef> entityDict;
 
-        // Logged in bool
+        // Login
         Boolean loggedIn = false;
+        String guildID = string.Empty;
 
         // WebClient
         WebClient Client = new WebClient();
@@ -93,6 +94,7 @@ namespace LogParser
             {
                 case "true":
                     loggedIn = true;
+                    guildID = returnArgs[1];
                     lbl_loggedIn.Text = "Logged in as " + username;
                     lbl_loggedIn.ForeColor = Color.Green;
                     txt_fileDir.Focus();
@@ -548,6 +550,7 @@ namespace LogParser
 
             string offset = (Convert.ToInt16((TimeZone.CurrentTimeZone).GetUtcOffset(DateTime.Now).ToString().Split(':')[0])).ToString();
             nvcDecompress.Add("timezone", offset);
+            nvcDecompress.Add("guildID", guildID);
 
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/insert.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
