@@ -46,7 +46,7 @@ namespace LogParser
         String guildID = string.Empty;
 
         // WebClient
-        WebClient Client = new WebClient();
+        CookieAwareWebClient Client = new CookieAwareWebClient();
         string k;
         byte[] result;
 
@@ -616,4 +616,21 @@ namespace LogParser
         #endregion // Progress
 
     }
+
+    public class CookieAwareWebClient : WebClient
+    {
+
+        private CookieContainer m_container = new CookieContainer();
+
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            WebRequest request = base.GetWebRequest(address);
+            if (request is HttpWebRequest)
+            {
+                (request as HttpWebRequest).CookieContainer = m_container;
+            }
+            return request;
+        }
+    }
+
 }
