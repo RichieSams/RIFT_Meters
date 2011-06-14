@@ -364,16 +364,6 @@ namespace LogParser
                             dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
                         }
                     }
-                    else if (line.Contains("Combat Begin"))
-                    {
-                        TypeID = "29";
-                        dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
-                    }
-                    else if (line.Contains("Combat End"))
-                    {
-                        TypeID = "30";
-                        dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
-                    }
 
                     uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 20));
 
