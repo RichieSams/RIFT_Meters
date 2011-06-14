@@ -614,6 +614,8 @@ namespace LogParser
 
     }
 
+    #region Cookie Class
+
     public class CookieAwareWebClient : WebClient
     {
 
@@ -629,5 +631,7 @@ namespace LogParser
             return request;
         }
     }
+
+    #endregion // Cookie Class
 
 }
