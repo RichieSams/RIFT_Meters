@@ -213,6 +213,7 @@ namespace LogParser
             entityDict = new Dictionary<string, entityDef>();
 
 #if PARSE
+
             #region Parsing
 
             try
@@ -426,9 +427,11 @@ namespace LogParser
             uploadBackgroundWorker.ReportProgress(20);
 
             #endregion // Parsing region
+
 #endif // PARSE
 
 #if COMPRESS
+
             #region Compression
 
             string fnOut = @"temp.zip";
@@ -458,6 +461,7 @@ namespace LogParser
             zipStream.Close();
 
             #endregion // Compression
+
 #endif // COMPRESS
 
             #region MD5Hash
@@ -528,6 +532,7 @@ namespace LogParser
             
             NameValueCollection nvcDecompress = new NameValueCollection();
             nvcDecompress.Add("file", md5hash);
+
             #region Check File Integrity
 
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/check.php", nvcDecompress);
