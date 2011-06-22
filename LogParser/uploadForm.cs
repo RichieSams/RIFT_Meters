@@ -550,9 +550,9 @@ namespace LogParser
             #endregion // Decompress
 
             #region Insert
+            //string offset = TimeZone.CurrentTimeZone.GetUtcOffset(TimeZone.CurrentTimeZone.ToLocalTime(DateTime.Now)).Hours.ToString();
 
-            string offset = (Convert.ToInt16((TimeZone.CurrentTimeZone).GetUtcOffset(DateTime.Now).ToString().Split(':')[0])).ToString();
-            nvcDecompress.Add("timezone", offset);
+            //nvcDecompress.Add("timezone", offset);
 
             result = Client.UploadValues("http://personaguild.com/publicRiftLogs/insert.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
