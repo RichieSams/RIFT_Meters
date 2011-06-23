@@ -1,5 +1,5 @@
-#define PARSE
-#define COMPRESS
+//#define PARSE
+//#define COMPRESS
 
 using System;
 using System.Collections;

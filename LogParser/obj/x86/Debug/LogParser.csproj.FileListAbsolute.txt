@@ -8,3 +8,13 @@ C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.exe
 C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.pdb
 C:\Users\Adrian\RIFT_Meters\LogParser\bin\Debug\ICSharpCode.SharpZipLib.dll
 C:\Users\Adrian\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.riftLogsUploader.resources
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\bin\Debug\LogParser.exe
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\bin\Debug\LogParser.pdb
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.riftLogsUploader.resources
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.Properties.Resources.resources
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.exe
+C:\Users\Derek\Documents\Visual Studio 2010\Projects\RIFT_Meters\LogParser\obj\x86\Debug\LogParser.pdb
