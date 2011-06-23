@@ -406,19 +406,23 @@ namespace LogParser
                                 {
                                     fighting = false;
                                     String tempEncNum = "\\N";
-                                    // Write each line to the csv file
+                                    
+                                    // Only use the encounter if it is longer than 30 seconds
                                     if (encEnd - encStart > TimeSpan.FromSeconds(30))
                                     {
                                         tempEncNum = encNum.ToString();
+                                        encNum++;
                                     }
 
+                                    // Write each line to the csv file
                                     foreach (String row in encArray)
                                     {
                                         dataWriter.WriteLine(row + tempEncNum + ",");
                                     }
-                                    // Clear the array and Increment the encounter number
+
+                                    // Clear the array
                                     encArray.Clear();
-                                    encNum++;
+                                    
                                 }
                             }
                             else
