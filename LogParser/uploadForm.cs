@@ -2,6 +2,7 @@
 #define COMPRESS
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -48,6 +49,7 @@ namespace LogParser
         CookieAwareWebClient Client = new CookieAwareWebClient();
         string k;
         byte[] result;
+
 
         #endregion // Variables
 
@@ -226,14 +228,23 @@ namespace LogParser
                 TextWriter dataWriter = new StreamWriter("data.csv");
                 String startTime = null;
 
+                // Create fights variables
+                ArrayList fightArray = new ArrayList();
+                Boolean fighting = false;
+                int fightIncr = 1;
+                int endCount = 0;
+                String npcID = string.Empty;
+
                 String line = string.Empty;
                 while ((line = reader.ReadLine()) != null)
                 {
                     // Initiate the data containers
                     String SourceID = "\\N";
                     String SourceName = "\\N";
+                    String SourceType = string.Empty;
                     String TargetID = "\\N";
                     String TargetName = "\\N";
+                    String TargetType = string.Empty;
                     String SourceOwnerID = "\\N";
                     String TargetOwnerID = "\\N";
                     String Amount = "\\N";
@@ -279,7 +290,9 @@ namespace LogParser
                             string s;
                             TypeID = CodeList[0];
                             SourceID = CodeList[1].Split('#')[2];
+                            SourceType = CodeList[1].Split('#')[0];
                             if (!((s = CodeList[2].Split('#')[2]).Equals("0"))) TargetID = s;
+                            if (!((s = CodeList[2].Split('#')[0]).Equals("T=X"))) TargetType = s;
                             if (!((s = CodeList[3].Split('#')[2]).Equals("0"))) SourceOwnerID = s;
                             if (!((s = CodeList[4].Split('#')[2]).Equals("0"))) TargetOwnerID = s;
                             SourceName = CodeList[5];
@@ -359,9 +372,47 @@ namespace LogParser
                                     }
                                 }
                             }
-                            // Write the data to the csv file
 
-                            dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                            // If the source is a non-pet npc and the target is a player, start an encounter
+                            if ((!fighting) && (SourceType == "T=N") && (TargetType == "T=P") && (SourceOwnerID == "\\N"))
+                            {
+                                fighting = true;
+                                npcID = SourceID;
+                            }
+
+                            // If the souce is a player and the target is a non-pet npc, start an encounter
+                            if ((!fighting) && (SourceType == "T=P") && (TargetType == "T=N") && (TargetOwnerID == "\\N"))
+                            {
+                                fighting = true;
+                                npcID = TargetID;
+                            }
+
+                            if (fighting)
+                            {
+                                // Add the row to the array
+                                fightArray.Add(Time + "," + fightIncr + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                                // If the npc isn't a target or source, start counting, otherwise, reset the counter
+                                // May need to use a different method for ending the encounter because of fights like hylas
+                                // looking for die or overkill might work; I need to look at a hylas combatlog.
+                                if ((TargetID != npcID) && (SourceID != npcID)) endCount++;
+                                else endCount = 0;
+
+                                // If the counter reaches 30, ie. 30 lines without any action to or from the npc, stop the encounter, write all the lines to the csv file, and clear the array
+                                if (endCount > 30)
+                                {
+                                    fighting = false;
+                                    foreach (String row in fightArray)
+                                    {
+                                        dataWriter.WriteLine(row);
+                                    }
+                                    fightArray.Clear();
+                                }
+                            }
+                            else
+                            {
+                                // Write the data to the csv file
+                                dataWriter.WriteLine(Time + ",\\N," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                            }
                         }
                     }
 
