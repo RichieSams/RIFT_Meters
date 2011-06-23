@@ -1,5 +1,5 @@
-//#define PARSE
-//#define COMPRESS
+#define PARSE
+#define COMPRESS
 
 using System;
 using System.Collections;
@@ -405,7 +405,7 @@ namespace LogParser
                                 if (DateTime.Parse(Time) == encEnd)
                                 {
                                     fighting = false;
-                                    String tempEncNum = "\\N";
+                                    String tempEncNum = "0";
                                     
                                     // Only use the encounter if it is longer than 30 seconds
                                     if (encEnd - encStart > TimeSpan.FromSeconds(30))
@@ -428,7 +428,7 @@ namespace LogParser
                             else
                             {
                                 // Write the data to the csv file
-                                dataWriter.WriteLine(Time + ",\\N," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                                dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
                         }
                     }
