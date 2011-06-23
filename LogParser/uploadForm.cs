@@ -228,16 +228,19 @@ namespace LogParser
                 TextWriter dataWriter = new StreamWriter("data.csv");
                 String startTime = null;
 
-                // Create fights variables
-                ArrayList fightArray = new ArrayList();
+                // Create encounter variables
+                ArrayList encArray = new ArrayList();
                 Boolean fighting = false;
-                int fightIncr = 1;
-                int endCount = 0;
-                String npcID = string.Empty;
+                int encNum = 1;
+                DateTime encStart = new DateTime();
+                DateTime encEnd = new DateTime();
+                String npcName = string.Empty;
 
                 String line = string.Empty;
+                int lineCounter = 0;
                 while ((line = reader.ReadLine()) != null)
                 {
+                    lineCounter++;
                     // Initiate the data containers
                     String SourceID = "\\N";
                     String SourceName = "\\N";
@@ -377,35 +380,45 @@ namespace LogParser
                             if ((!fighting) && (SourceType == "T=N") && (TargetType == "T=P") && (SourceOwnerID == "\\N"))
                             {
                                 fighting = true;
-                                npcID = SourceID;
+                                npcName = SourceName;
+                                encStart = DateTime.Parse(Time);
+                                encEnd = encStart.AddSeconds(10);
                             }
 
                             // If the souce is a player and the target is a non-pet npc, start an encounter
                             if ((!fighting) && (SourceType == "T=P") && (TargetType == "T=N") && (TargetOwnerID == "\\N"))
                             {
                                 fighting = true;
-                                npcID = TargetID;
+                                npcName = TargetName;
+                                encStart = DateTime.Parse(Time);
+                                encEnd = encStart.AddSeconds(10);
                             }
 
                             if (fighting)
                             {
                                 // Add the row to the array
-                                fightArray.Add(Time + "," + fightIncr + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
-                                // If the npc isn't a target or source, start counting, otherwise, reset the counter
-                                // May need to use a different method for ending the encounter because of fights like hylas
-                                // looking for die or overkill might work; I need to look at a hylas combatlog.
-                                if ((TargetID != npcID) && (SourceID != npcID)) endCount++;
-                                else endCount = 0;
+                                encArray.Add(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                                // If the npc is a target or source, extend the end time by 10 seconds
+                                if (!((TargetName != npcName) && (SourceName != npcName))) encEnd = DateTime.Parse(Time).AddSeconds(10);
 
-                                // If the counter reaches 30, ie. 30 lines without any action to or from the npc, stop the encounter, write all the lines to the csv file, and clear the array
-                                if (endCount > 30)
+                                // If 10 seconds go by before there is any action by the npc, the encounter ends
+                                if (DateTime.Parse(Time) == encEnd)
                                 {
                                     fighting = false;
-                                    foreach (String row in fightArray)
+                                    String tempEncNum = "\\N";
+                                    // Write each line to the csv file
+                                    if (encEnd - encStart > TimeSpan.FromSeconds(30))
                                     {
-                                        dataWriter.WriteLine(row);
+                                        tempEncNum = encNum.ToString();
                                     }
-                                    fightArray.Clear();
+
+                                    foreach (String row in encArray)
+                                    {
+                                        dataWriter.WriteLine(row + tempEncNum + ",");
+                                    }
+                                    // Clear the array and Increment the encounter number
+                                    encArray.Clear();
+                                    encNum++;
                                 }
                             }
                             else
