@@ -32,6 +32,19 @@ namespace LogParser
 
         #region Variables
 
+        // NPC Struct
+        struct lastNPCTime
+        {
+            public DateTime time;
+            public int index;
+
+            public lastNPCTime(DateTime time, int index)
+            {
+                this.time = time;
+                this.index = index;
+            }
+        }
+
         // Spell Dictionary
         Dictionary<string, string> spellDict;
 
@@ -206,6 +219,8 @@ namespace LogParser
 
         #region Work
 
+
+
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
             String logDir = (String)e.Argument;
@@ -227,14 +242,12 @@ namespace LogParser
                 // Create csv file and the file writer
                 TextWriter dataWriter = new StreamWriter("data.csv");
                 String startTime = null;
+                DateTime startDateTime = new DateTime();
 
                 // Create encounter variables
                 ArrayList encArray = new ArrayList();
-                Boolean fighting = false;
                 int encNum = 1;
-                DateTime encStart = new DateTime();
-                DateTime encEnd = new DateTime();
-                String npcName = string.Empty;
+                Dictionary<ulong, lastNPCTime> NPCList = new Dictionary<ulong, lastNPCTime>();
 
                 String line = string.Empty;
                 int lineCounter = 0;
@@ -268,6 +281,7 @@ namespace LogParser
                         if (startTime == null)
                         {
                             startTime = Time;
+                            startDateTime = DateTime.Parse(startTime);
                             dataWriter.WriteLine(startTime);
                         }
                     }
@@ -376,53 +390,105 @@ namespace LogParser
                                 }
                             }
 
-                            // If the source is a non-pet npc and the target is a player, start an encounter
-                            if ((!fighting) && (SourceType == "T=N") && (TargetType == "T=P") && (SourceOwnerID == "\\N"))
-                            {
-                                fighting = true;
-                                npcName = SourceName;
-                                encStart = DateTime.Parse(Time);
-                                encEnd = encStart.AddSeconds(10);
-                            }
+                            // Date Correction if it starts before midnight and goes after midnight
+                            DateTime logTime = DateTime.Parse(Time);
+                            if (startDateTime.CompareTo(logTime) > 0)
+                                logTime = logTime.AddDays(1);
 
-                            // If the souce is a player and the target is a non-pet npc, start an encounter
-                            if ((!fighting) && (SourceType == "T=P") && (TargetType == "T=N") && (TargetOwnerID == "\\N"))
-                            {
-                                fighting = true;
-                                npcName = TargetName;
-                                encStart = DateTime.Parse(Time);
-                                encEnd = encStart.AddSeconds(10);
-                            }
+                            // Need to start the encounter at the first occurance of that NPC
+                            ulong sID = Convert.ToUInt64(SourceID);
+                            ulong tID = (TargetID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetID));
+                            ulong sOwnerID = (SourceOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(SourceOwnerID));
+                            ulong tOwnerID = (TargetOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetOwnerID));
+                            ulong NPCID = 0;
 
-                            if (fighting)
+                            // Source is a enemy NPC targetting a friendly
+                            if (sID > 8000000000000000000 && (sOwnerID > 8000000000000000000 || sOwnerID == 0))
                             {
-                                // Add the row to the array
-                                encArray.Add(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
-                                // If the npc is a target or source, extend the end time by 10 seconds
-                                if (!((TargetName != npcName) && (SourceName != npcName))) encEnd = DateTime.Parse(Time).AddSeconds(10);
-
-                                // If 10 seconds go by before there is any action by the npc, the encounter ends
-                                if (DateTime.Parse(Time) == encEnd)
+                                if ((tID < 8000000000000000000 && tID > 0) || (tID > 0 && tOwnerID < 8000000000000000000 && tOwnerID > 0))
                                 {
-                                    fighting = false;
-                                    String tempEncNum = "0";
-                                    
-                                    // Only use the encounter if it is longer than 30 seconds
-                                    if (encEnd - encStart > TimeSpan.FromSeconds(30))
+                                    NPCID = sID;
+                                }
+                            }
+                            // Target is a enemy NPC from a friendly source
+                            else if (tID > 8000000000000000000 && (tOwnerID > 8000000000000000000 || tOwnerID == 0))
+                            {
+                                if (sID < 8000000000000000000 || (sOwnerID < 8000000000000000000))
+                                {
+                                    NPCID = tID;
+                                }
+                            }
+                            int index = 0;
+                            // Store Line
+                            if (NPCID > 0 || NPCList.Count > 0)
+                                index = encArray.Add(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
+                            // Add or update NPC List
+                            if (NPCID > 0)
+                            {
+                                // Update last known NPC time and index
+                                lastNPCTime npc = new lastNPCTime(logTime, index);
+                                if (NPCList.ContainsKey(NPCID))
+                                    NPCList[NPCID] = npc;
+                                // Add new last known NPC time and index
+                                else
+                                    NPCList.Add(NPCID, npc);
+                            }
+                            int lastIndex = 0;
+                            // Remove NPCs were slain (Can sometimes slay themselves?)
+                            if (int.Parse(CodeList[0]) == 11) {
+                                tID = (TargetID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetID));
+                                if (NPCList.ContainsKey(tID))
+                                {
+                                    lastIndex = NPCList[tID].index;
+                                    NPCList.Remove(tID);
+                                }
+                            }
+                            // Remove NPCs that died (Might already be slain?)
+                            if (int.Parse(CodeList[0]) == 12) {
+                                if (NPCList.ContainsKey(sID))
+                                {
+                                    lastIndex = NPCList[sID].index;
+                                    NPCList.Remove(sID);
+                                }
+                            }
+                            if (NPCList.Count > 0)
+                            {
+                                // Remove NPCs that died or havent been heard from in a while
+                                DateTime aWhileAgo = logTime.AddSeconds(-20);
+                                List<ulong> toRemove = new List<ulong>();
+                                foreach (KeyValuePair<ulong, lastNPCTime> entry in NPCList)
+                                {
+                                    if (entry.Value.time.CompareTo(aWhileAgo) < 0)
                                     {
-                                        tempEncNum = encNum.ToString();
-                                        encNum++;
+                                        // Last action was a while ago
+                                        toRemove.Add(entry.Key);
+                                        if (lastIndex < entry.Value.index)
+                                            lastIndex = entry.Value.index;
                                     }
-
-                                    // Write each line to the csv file
-                                    foreach (String row in encArray)
+                                }
+                                // Remove from NPCList
+                                foreach (ulong key in toRemove) {
+                                    NPCList.Remove(key);
+                                }
+                                // If no more NPCs then encounter over
+                                if (NPCList.Count == 0)
+                                {
+                                    // Print all rows part of the encounter
+                                    while (lastIndex >= 0)
                                     {
-                                        dataWriter.WriteLine(row + tempEncNum + ",");
+                                        dataWriter.WriteLine(encArray[0] + encNum.ToString() + ",");
+                                        encArray.RemoveAt(0);
+                                        lastIndex--;
                                     }
-
-                                    // Clear the array
-                                    encArray.Clear();
-                                    
+                                    // Print extra rows that got caught up
+                                    lastIndex = encArray.Count;
+                                    while (lastIndex > 0)
+                                    {
+                                        dataWriter.WriteLine(encArray[0] + "0,");
+                                        encArray.RemoveAt(0);
+                                        lastIndex--;
+                                    }
+                                    encNum++;
                                 }
                             }
                             else
@@ -430,6 +496,7 @@ namespace LogParser
                                 // Write the data to the csv file
                                 dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
+
                         }
                     }
 
