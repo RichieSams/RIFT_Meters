@@ -55,6 +55,9 @@ namespace LogParser
         }
         Dictionary<string, entityDef> entityDict;
 
+        // Encounter Dictionary
+        Dictionary<int, string> encDict;
+
         // Login
         Boolean loggedIn = false;
 
@@ -228,6 +231,7 @@ namespace LogParser
             int lineCount = File.ReadLines(logDir).Count();
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
+            encDict = new Dictionary<int, string>();
 
 #if PARSE
 
@@ -247,6 +251,7 @@ namespace LogParser
                 // Create encounter variables
                 ArrayList encArray = new ArrayList();
                 int encNum = 1;
+                String encName = string.Empty;
                 Dictionary<ulong, lastNPCTime> NPCList = new Dictionary<ulong, lastNPCTime>();
 
                 String line = string.Empty;
@@ -397,6 +402,8 @@ namespace LogParser
                             ulong sOwnerID = (SourceOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(SourceOwnerID));
                             ulong tOwnerID = (TargetOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetOwnerID));
                             ulong NPCID = 0;
+                            String NPCName = string.Empty;
+                            
 
                             // Source is a enemy NPC targetting a friendly
                             if (sID > 8000000000000000000 && (sOwnerID > 8000000000000000000 || sOwnerID == 0))
@@ -404,6 +411,7 @@ namespace LogParser
                                 if ((tID < 8000000000000000000 && tID > 0) || (tID > 0 && tOwnerID < 8000000000000000000 && tOwnerID > 0))
                                 {
                                     NPCID = sID;
+                                    NPCName = SourceName;
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
@@ -412,9 +420,15 @@ namespace LogParser
                                 if (sID < 8000000000000000000 || (sOwnerID < 8000000000000000000))
                                 {
                                     NPCID = tID;
+                                    NPCName = TargetName;
                                 }
                             }
                             int index = 0;
+                            // Store name of the first npc in the encounter
+                            if ((NPCID > 0) && (NPCList.Count == 0))
+                            {
+                                encName = NPCName;
+                            }
                             // Store Line
                             if (NPCID > 0 || NPCList.Count > 0)
                                 index = encArray.Add(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
@@ -484,6 +498,8 @@ namespace LogParser
                                         encArray.RemoveAt(0);
                                         lastIndex--;
                                     }
+                                    // Add encounter to encounter Dictionary
+                                    encDict.Add(encNum, encName);
                                     encNum++;
                                 }
                             }
@@ -544,8 +560,24 @@ namespace LogParser
 
             }
 
+            try
+            {
+                TextWriter spellWriter = new StreamWriter("encounter.csv");
+
+                foreach (KeyValuePair<int, string> kvp in encDict)
+                {
+                    spellWriter.WriteLine(kvp.Key + "," + kvp.Value + ",");
+                }
+
+                spellWriter.Close();
+            }
+            catch (IOException)
+            {
+
+            }
+
             // Update progress
-            uploadBackgroundWorker.ReportProgress(20);
+            uploadBackgroundWorker.ReportProgress(33);
 
             #endregion // Parsing region
 
@@ -560,7 +592,7 @@ namespace LogParser
             zipStream.SetLevel(9); //0-9, 9 being the highest level of compression
             //zipStream.Password = "ok";
 
-            string[] files = { @"data.csv", @"spell.csv", @"entity.csv" };
+            string[] files = { @"data.csv", @"spell.csv", @"entity.csv", @"encounter.csv"};
             foreach (string inputFn in files)
             {
                 FileInfo fi = new FileInfo(inputFn);
