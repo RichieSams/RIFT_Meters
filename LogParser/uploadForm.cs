@@ -257,10 +257,8 @@ namespace LogParser
                     // Initiate the data containers
                     String SourceID = "\\N";
                     String SourceName = "\\N";
-                    String SourceType = string.Empty;
                     String TargetID = "\\N";
                     String TargetName = "\\N";
-                    String TargetType = string.Empty;
                     String SourceOwnerID = "\\N";
                     String TargetOwnerID = "\\N";
                     String Amount = "\\N";
@@ -307,9 +305,7 @@ namespace LogParser
                             string s;
                             TypeID = CodeList[0];
                             SourceID = CodeList[1].Split('#')[2];
-                            SourceType = CodeList[1].Split('#')[0];
                             if (!((s = CodeList[2].Split('#')[2]).Equals("0"))) TargetID = s;
-                            if (!((s = CodeList[2].Split('#')[0]).Equals("T=X"))) TargetType = s;
                             if (!((s = CodeList[3].Split('#')[2]).Equals("0"))) SourceOwnerID = s;
                             if (!((s = CodeList[4].Split('#')[2]).Equals("0"))) TargetOwnerID = s;
                             SourceName = CodeList[5];
@@ -500,7 +496,7 @@ namespace LogParser
                         }
                     }
 
-                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 20));
+                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 33));
 
                 }
                 // Close the csv file
@@ -604,7 +600,7 @@ namespace LogParser
             string md5hash = sb.ToString();
 
             // Update progress
-            uploadBackgroundWorker.ReportProgress(40);
+            uploadBackgroundWorker.ReportProgress(66);
 
             #endregion
 
@@ -648,7 +644,7 @@ namespace LogParser
                 }
                 bufferPart += chunkSize;
 
-                uploadBackgroundWorker.ReportProgress((int)(40 + ((++progress / numChunks) * 20)));
+                uploadBackgroundWorker.ReportProgress((int)(66 + ((++progress / numChunks) * 33)));
             }
             ftpstream.Close();
 
@@ -672,27 +668,21 @@ namespace LogParser
 
             #endregion // Check File Integrity
 
-            #region Decompress
+            #region FileHandler
 
-            //Client.Headers.Remove("Content-Type");
-
-            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/decompress.php", nvcDecompress);
+            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/fileHandler.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
 
-            // Update progress
-            uploadBackgroundWorker.ReportProgress(80);
-
-            #endregion // Decompress
-
-            #region Insert
-
-            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/insert.php", nvcDecompress);
-            k = Encoding.UTF8.GetString(result, 0, result.Length);
+            if (k != "SUCCESS")
+            {
+                MessageBox.Show("Data insertion failed. Retry upload. If problem persists, contact an administrator", "Data insertion failed");
+                return;
+            }
 
             // Update progress
             uploadBackgroundWorker.ReportProgress(100);
 
-            #endregion // Insert
+            #endregion // FileHandler
 
             return;
 
@@ -708,25 +698,21 @@ namespace LogParser
             {
                 uploadProgress.Value = e.ProgressPercentage;
 
-                if (e.ProgressPercentage < 20)
+                if (e.ProgressPercentage < 33)
                 {
-                    lbl_statusTxt.Text = "Parsing combat log - " + e.ProgressPercentage*5 + "%";
+                    lbl_statusTxt.Text = "Parsing combat log - " + e.ProgressPercentage*3 + "%";
                 }
-                else if (e.ProgressPercentage < 40)
+                else if (e.ProgressPercentage < 66)
                 {
                     lbl_statusTxt.Text = "Compressing data";
                 }
-                else if (e.ProgressPercentage < 60)
+                else if (e.ProgressPercentage < 99)
                 {
-                    lbl_statusTxt.Text = "Uploading data - " + (e.ProgressPercentage - 40) * 5 + "% (This can take some time)";
-                }
-                else if (e.ProgressPercentage < 80)
-                {
-                    lbl_statusTxt.Text = "Decompressing data";
+                    lbl_statusTxt.Text = "Uploading data - " + (e.ProgressPercentage - 66) * 3 + "% (This can take some time)";
                 }
                 else
                 {
-                    lbl_statusTxt.Text = "Inserting data into the database";
+                    lbl_statusTxt.Text = "Finishing";
                 }
             }           
         }
