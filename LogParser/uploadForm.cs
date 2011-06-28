@@ -56,7 +56,7 @@ namespace LogParser
         Dictionary<string, entityDef> entityDict;
 
         // Encounter Dictionary
-        Dictionary<int, string> encDict;
+        Dictionary<int, entityDef> encDict;
 
         // Login
         Boolean loggedIn = false;
@@ -231,7 +231,7 @@ namespace LogParser
             int lineCount = File.ReadLines(logDir).Count();
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
-            encDict = new Dictionary<int, string>();
+            encDict = new Dictionary<int, entityDef>();
 
 #if PARSE
 
@@ -251,7 +251,7 @@ namespace LogParser
                 // Create encounter variables
                 ArrayList encArray = new ArrayList();
                 int encNum = 1;
-                String encName = string.Empty;
+                entityDef encNpc = new entityDef();
                 Dictionary<ulong, lastNPCTime> NPCList = new Dictionary<ulong, lastNPCTime>();
 
                 String line = string.Empty;
@@ -402,8 +402,7 @@ namespace LogParser
                             ulong sOwnerID = (SourceOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(SourceOwnerID));
                             ulong tOwnerID = (TargetOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetOwnerID));
                             ulong NPCID = 0;
-                            String NPCName = string.Empty;
-                            
+                            entityDef npc = new entityDef();
 
                             // Source is a enemy NPC targetting a friendly
                             if (sID > 8000000000000000000 && (sOwnerID > 8000000000000000000 || sOwnerID == 0))
@@ -411,7 +410,8 @@ namespace LogParser
                                 if ((tID < 8000000000000000000 && tID > 0) || (tID > 0 && tOwnerID < 8000000000000000000 && tOwnerID > 0))
                                 {
                                     NPCID = sID;
-                                    NPCName = SourceName;
+                                    npc.name = SourceName;
+                                    npc.id = NPCID.ToString();
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
@@ -420,14 +420,15 @@ namespace LogParser
                                 if (sID < 8000000000000000000 || (sOwnerID < 8000000000000000000))
                                 {
                                     NPCID = tID;
-                                    NPCName = TargetName;
+                                    npc.name = TargetName;
+                                    npc.id = NPCID.ToString();
                                 }
                             }
                             int index = 0;
                             // Store name of the first npc in the encounter
                             if ((NPCID > 0) && (NPCList.Count == 0))
                             {
-                                encName = NPCName;
+                                encNpc = npc;
                             }
                             // Store Line
                             if (NPCID > 0 || NPCList.Count > 0)
@@ -436,12 +437,12 @@ namespace LogParser
                             if (NPCID > 0)
                             {
                                 // Update last known NPC time and index
-                                lastNPCTime npc = new lastNPCTime(logTime, index);
+                                lastNPCTime lastNpc = new lastNPCTime(logTime, index);
                                 if (NPCList.ContainsKey(NPCID))
-                                    NPCList[NPCID] = npc;
+                                    NPCList[NPCID] = lastNpc;
                                 // Add new last known NPC time and index
                                 else
-                                    NPCList.Add(NPCID, npc);
+                                    NPCList.Add(NPCID, lastNpc);
                             }
                             int lastIndex = 0;
                             // Remove NPCs were slain (Can sometimes slay themselves?)
@@ -499,7 +500,7 @@ namespace LogParser
                                         lastIndex--;
                                     }
                                     // Add encounter to encounter Dictionary
-                                    encDict.Add(encNum, encName);
+                                    encDict.Add(encNum, encNpc);
                                     encNum++;
                                 }
                             }
@@ -562,14 +563,14 @@ namespace LogParser
 
             try
             {
-                TextWriter spellWriter = new StreamWriter("encounter.csv");
+                TextWriter encWriter = new StreamWriter("encounter.csv");
 
-                foreach (KeyValuePair<int, string> kvp in encDict)
+                foreach (KeyValuePair<int, entityDef> kvp in encDict)
                 {
-                    spellWriter.WriteLine(kvp.Key + "," + kvp.Value + ",");
+                    encWriter.WriteLine(kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + ",");
                 }
 
-                spellWriter.Close();
+                encWriter.Close();
             }
             catch (IOException)
             {
