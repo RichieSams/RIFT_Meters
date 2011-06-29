@@ -52,6 +52,8 @@ namespace LogParser
         struct entityDef {
             public string id;
             public string name;
+            public string startTime;
+            public string endTime;
         }
         Dictionary<string, entityDef> entityDict;
 
@@ -412,6 +414,7 @@ namespace LogParser
                                     NPCID = sID;
                                     npc.name = SourceName;
                                     npc.id = NPCID.ToString();
+                                    npc.startTime = Time;
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
@@ -422,6 +425,7 @@ namespace LogParser
                                     NPCID = tID;
                                     npc.name = TargetName;
                                     npc.id = NPCID.ToString();
+                                    npc.startTime = Time;
                                 }
                             }
                             int index = 0;
@@ -484,13 +488,16 @@ namespace LogParser
                                 // If no more NPCs then encounter over
                                 if (NPCList.Count == 0)
                                 {
+                                    string endTime = null;
                                     // Print all rows part of the encounter
                                     while (lastIndex >= 0)
                                     {
                                         dataWriter.WriteLine(encArray[0] + encNum.ToString() + ",");
                                         encArray.RemoveAt(0);
+                                        endTime = ((string)encArray[0]).Substring(0, 8);
                                         lastIndex--;
                                     }
+                                    encNpc.endTime = endTime;
                                     // Print extra rows that got caught up
                                     lastIndex = encArray.Count;
                                     while (lastIndex > 0)
@@ -567,7 +574,7 @@ namespace LogParser
 
                 foreach (KeyValuePair<int, entityDef> kvp in encDict)
                 {
-                    encWriter.WriteLine(kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + ",");
+                    encWriter.WriteLine(kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
                 }
 
                 encWriter.Close();
