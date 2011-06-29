@@ -411,10 +411,14 @@ namespace LogParser
                             {
                                 if ((tID < 8000000000000000000 && tID > 0) || (tID > 0 && tOwnerID < 8000000000000000000 && tOwnerID > 0))
                                 {
-                                    NPCID = sID;
-                                    npc.name = SourceName;
-                                    npc.id = NPCID.ToString();
-                                    npc.startTime = Time;
+                                    // Ignore rez spells because they currently count as an npc
+                                    if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
+                                    {
+                                        NPCID = sID;
+                                        npc.name = SourceName;
+                                        npc.id = NPCID.ToString();
+                                        npc.startTime = Time;
+                                    }
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
@@ -422,10 +426,14 @@ namespace LogParser
                             {
                                 if (sID < 8000000000000000000 || (sOwnerID < 8000000000000000000))
                                 {
-                                    NPCID = tID;
-                                    npc.name = TargetName;
-                                    npc.id = NPCID.ToString();
-                                    npc.startTime = Time;
+                                    // Ignore rez spells because they currently count as an npc
+                                    if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
+                                    {
+                                        NPCID = tID;
+                                        npc.name = TargetName;
+                                        npc.id = NPCID.ToString();
+                                        npc.startTime = Time;
+                                    }
                                 }
                             }
                             int index = 0;
