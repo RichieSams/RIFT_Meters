@@ -458,7 +458,8 @@ namespace LogParser
                             }
                             int lastIndex = 0;
                             // Remove NPCs were slain (Can sometimes slay themselves?)
-                            if (int.Parse(CodeList[0]) == 11) {
+                            if (int.Parse(CodeList[0]) == 11) 
+                            {
                                 tID = (TargetID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetID));
                                 if (NPCList.ContainsKey(tID))
                                 {
@@ -467,7 +468,8 @@ namespace LogParser
                                 }
                             }
                             // Remove NPCs that died (Might already be slain?)
-                            if (int.Parse(CodeList[0]) == 12) {
+                            if (int.Parse(CodeList[0]) == 12) 
+                            {
                                 if (NPCList.ContainsKey(sID))
                                 {
                                     lastIndex = NPCList[sID].index;
