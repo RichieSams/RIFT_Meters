@@ -68,6 +68,12 @@ namespace LogParser
         string k;
         byte[] result;
 
+        // IDs
+        UInt16 playerID = 0; // 0-1999
+        UInt16 playerPetID = 2000; // 2000-3999
+        UInt16 npcID = 4000; // 4000-6999
+        UInt16 npcPetID = 7000; // 7000-8999
+        Dictionary<UInt64, UInt16> ids;
 
         #endregion // Variables
 
@@ -104,26 +110,33 @@ namespace LogParser
             nvcLoginInfo.Add("pass", passMD5);
 
             // Call php
-            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/login.php", nvcLoginInfo);
-            k = Encoding.UTF8.GetString(result, 0, result.Length);
-
-            // Check echos
-            String[] returnArgs = k.Split(',');
-            switch (returnArgs[0])
+            try
             {
-                case "true":
-                    loggedIn = true;
-                    lbl_loggedIn.Text = "Logged in as " + username;
-                    lbl_loggedIn.ForeColor = Color.Green;
-                    txt_fileDir.Focus();
-                    break;
-                case "false":
-                    MessageBox.Show("Invalid login information", "Login failed");
-                    break;
+                result = Client.UploadValues("http://personaguild.com/publicRiftLogs/login.php", nvcLoginInfo);
+                k = Encoding.UTF8.GetString(result, 0, result.Length);
 
-                case "FAILURE":
-                    MessageBox.Show("login.php threw an error. Please contact an administrator with the circumstances that caused this error.", "PHP file error");
-                    break;
+                // Check echos
+                String[] returnArgs = k.Split(',');
+                switch (returnArgs[0])
+                {
+                    case "true":
+                        loggedIn = true;
+                        lbl_loggedIn.Text = "Logged in as " + username;
+                        lbl_loggedIn.ForeColor = Color.Green;
+                        txt_fileDir.Focus();
+                        break;
+                    case "false":
+                        MessageBox.Show("Invalid login information", "Login failed");
+                        break;
+
+                    case "FAILURE":
+                        MessageBox.Show("login.php threw an error. Please contact an administrator with the circumstances that caused this error.", "PHP file error");
+                        break;
+                }
+            }
+            catch (System.Net.WebException)
+            {
+                MessageBox.Show("You must be connected to the internet to use the Rift Logs Uploader", "No internet connection");
             }
         }
 
@@ -224,7 +237,58 @@ namespace LogParser
 
         #region Work
 
-
+        private String getID(UInt64 origID, UInt64 ownerID)
+        {
+            // Return null if the id is originally zero
+            if (origID == 0)
+            {
+                return "\\N";
+            }
+            else
+            {
+                // Check if it is a pet
+                if (ownerID == 0)
+                {
+                    // Check if it is a npc or a player
+                    if (origID > 8000000000000000000)
+                    {
+                        if (!(ids.ContainsKey(origID)))
+                        {
+                            ids.Add(origID, npcID++);
+                        }
+                        return ids[origID].ToString();
+                    }
+                    else
+                    {
+                        if (!(ids.ContainsKey(origID)))
+                        {
+                            ids.Add(origID, playerID++);
+                        }
+                        return ids[origID].ToString();
+                    }
+                }
+                else
+                {
+                    // Check if it is a npc or a player
+                    if (origID > 8000000000000000000)
+                    {
+                        if (!(ids.ContainsKey(origID)))
+                        {
+                            ids.Add(origID, npcPetID++);
+                        }
+                        return ids[origID].ToString();
+                    }
+                    else
+                    {
+                        if (!(ids.ContainsKey(origID)))
+                        {
+                            ids.Add(origID, playerPetID++);
+                        }
+                        return ids[origID].ToString();
+                    }
+                }
+            }
+        }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -234,6 +298,7 @@ namespace LogParser
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
             encDict = new Dictionary<int, entityDef>();
+            ids = new Dictionary<UInt64, UInt16>();
 
 #if PARSE
 
@@ -308,13 +373,21 @@ namespace LogParser
                         // Only parse relevant combat lines
                         if (((int.Parse(CodeList[0]) >= 1) && (int.Parse(CodeList[0]) <= 23)) || ((int.Parse(CodeList[0]) >= 26) && (int.Parse(CodeList[0]) <= 28)))
                         {
-                            // Set ID's and names
-                            string s;
+                            // Set ID's
+
                             TypeID = CodeList[0];
-                            SourceID = CodeList[1].Split('#')[2];
-                            if (!((s = CodeList[2].Split('#')[2]).Equals("0"))) TargetID = s;
-                            if (!((s = CodeList[3].Split('#')[2]).Equals("0"))) SourceOwnerID = s;
-                            if (!((s = CodeList[4].Split('#')[2]).Equals("0"))) TargetOwnerID = s;
+                            UInt64 IntSourceID = Convert.ToUInt64(CodeList[1].Split('#')[2]);
+                            UInt64 IntTargetID = Convert.ToUInt64(CodeList[2].Split('#')[2]);
+                            UInt64 IntSourceOwnerID = Convert.ToUInt64(CodeList[3].Split('#')[2]);
+                            UInt64 IntTargetOwnerID = Convert.ToUInt64(CodeList[4].Split('#')[2]);
+
+                            SourceID = getID(IntSourceID, IntSourceOwnerID);
+                            TargetID = getID(IntTargetID, IntTargetOwnerID);
+                            SourceOwnerID = getID(IntSourceOwnerID, 0);
+                            TargetOwnerID = getID(IntTargetOwnerID, 0);
+
+                            // Set names
+                            string s;
                             SourceName = CodeList[5];
                             if (!((s = CodeList[6]).Equals("Unknown")))
                             {
@@ -407,9 +480,9 @@ namespace LogParser
                             entityDef npc = new entityDef();
 
                             // Source is a enemy NPC targetting a friendly
-                            if (sID > 8000000000000000000 && (sOwnerID > 8000000000000000000 || sOwnerID == 0))
+                            if (sID >= 4000 && sID <= 8999)
                             {
-                                if ((tID < 8000000000000000000 && tID > 0) || (tID > 0 && tOwnerID < 8000000000000000000 && tOwnerID > 0))
+                                if (tID >= 0 && tID <= 3999)
                                 {
                                     // Ignore rez spells because they currently count as an npc
                                     if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
@@ -422,9 +495,9 @@ namespace LogParser
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
-                            else if (tID > 8000000000000000000 && (tOwnerID > 8000000000000000000 || tOwnerID == 0))
+                            else if (tID >= 4000 && tID <= 8999)
                             {
-                                if (sID < 8000000000000000000 || (sOwnerID < 8000000000000000000))
+                                if (sID >= 0 && sID <= 3999)
                                 {
                                     // Ignore rez spells because they currently count as an npc
                                     if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
@@ -733,6 +806,12 @@ namespace LogParser
             uploadBackgroundWorker.ReportProgress(100);
 
             #endregion // FileHandler
+
+            // Reset ID incrementors and array
+            playerID = 0;
+            playerPetID = 2000;
+            npcID = 4000;
+            npcPetID = 7000;
 
             return;
 
