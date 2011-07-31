@@ -1,6 +1,3 @@
-#define PARSE
-#define COMPRESS
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,6 +28,9 @@ namespace LogParser
         }
 
         #region Variables
+
+        // Upload success
+        Boolean done = false;
 
         // NPC Struct
         struct lastNPCTime
@@ -69,13 +69,24 @@ namespace LogParser
         byte[] result;
 
         // IDs
-        UInt16 playerID = 0; // 0-1999
-        UInt16 playerPetID = 2000; // 2000-3999
-        UInt16 npcID = 4000; // 4000-6999
-        UInt16 npcPetID = 7000; // 7000-8999
+        UInt16 playerID = 1; // 1-2000
+        UInt16 playerPetID = 2001; // 2001-4000
+        UInt16 npcID = 4001; // 4001-7000
+        UInt16 npcPetID = 7001; // 7001-9000
         Dictionary<UInt64, UInt16> ids;
 
         #endregion // Variables
+
+        #region On load
+
+        private void riftLogsUploader_Load(object sender, EventArgs e)
+        {
+            txt_month.Text = DateTime.Today.Month.ToString();
+            txt_day.Text = DateTime.Today.Day.ToString();
+            txt_year.Text = DateTime.Today.Year.ToString();
+        }
+
+        #endregion // On load
 
         #region Log in
 
@@ -270,7 +281,7 @@ namespace LogParser
                 else
                 {
                     // Check if it is a npc or a player
-                    if (origID > 8000000000000000000)
+                    if (ownerID > 8000000000000000000)
                     {
                         if (!(ids.ContainsKey(origID)))
                         {
@@ -292,20 +303,21 @@ namespace LogParser
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            String logDir = (String)e.Argument;
+            #region Parsing
+
             double progress = 0;
-            int lineCount = File.ReadLines(logDir).Count();
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
             encDict = new Dictionary<int, entityDef>();
             ids = new Dictionary<UInt64, UInt16>();
 
-#if PARSE
-
-            #region Parsing
 
             try
             {
+                String logDir = (String)e.Argument;
+                int lineCount = File.ReadLines(logDir).Count();
+                
+
                 // Open combat log file
                 FileStream fs = new FileStream(logDir, FileMode.Open, FileAccess.Read);
                 StreamReader reader = new StreamReader(fs);
@@ -352,7 +364,7 @@ namespace LogParser
                         {
                             startTime = Time;
                             startDateTime = DateTime.Parse(startTime);
-                            dataWriter.WriteLine(startTime);
+                            dataWriter.WriteLine(txt_year.Text + "-" + txt_month.Text + "-" + txt_day.Text + " " + startTime);
                         }
                     }
 
@@ -480,9 +492,9 @@ namespace LogParser
                             entityDef npc = new entityDef();
 
                             // Source is a enemy NPC targetting a friendly
-                            if (sID >= 4000 && sID <= 8999)
+                            if (sID >= 4001 && sID <= 9000)
                             {
-                                if (tID >= 0 && tID <= 3999)
+                                if (tID >= 1 && tID <= 4000)
                                 {
                                     // Ignore rez spells because they currently count as an npc
                                     if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
@@ -495,9 +507,9 @@ namespace LogParser
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
-                            else if (tID >= 4000 && tID <= 8999)
+                            else if (tID >= 4001 && tID <= 9000)
                             {
-                                if (sID >= 0 && sID <= 3999)
+                                if (sID >= 1 && sID <= 4000)
                                 {
                                     // Ignore rez spells because they currently count as an npc
                                     if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
@@ -615,6 +627,27 @@ namespace LogParser
                 return;
             }
 
+            result = Client.DownloadData("http://personaguild.com/publicRiftLogs/bossList.php");
+            k = Encoding.UTF8.GetString(result, 0, result.Length);
+
+            String[] bosses = k.Split(',');
+            Boolean bossBool = false;
+
+            foreach (KeyValuePair<string, entityDef> kvp in entityDict)
+            {
+                if (bosses.Contains(kvp.Value.name))
+                {
+                    bossBool = true;
+                    break;
+                }
+            }
+
+            if (!bossBool)
+            {
+                MessageBox.Show("The combat log contains no raid bosses. Only upload raid combat logs", "No raid bosses found");
+                return;
+            }
+
             try
             {
                 TextWriter spellWriter = new StreamWriter("spell.csv");
@@ -672,9 +705,9 @@ namespace LogParser
 
             #endregion // Parsing region
 
-#endif // PARSE
 
-#if COMPRESS
+
+
 
             #region Compression
 
@@ -706,7 +739,7 @@ namespace LogParser
 
             #endregion // Compression
 
-#endif // COMPRESS
+
 
             #region MD5Hash
 
@@ -808,11 +841,12 @@ namespace LogParser
             #endregion // FileHandler
 
             // Reset ID incrementors and array
-            playerID = 0;
-            playerPetID = 2000;
-            npcID = 4000;
-            npcPetID = 7000;
+            playerID = 1;
+            playerPetID = 2001;
+            npcID = 4001;
+            npcPetID = 7001;
 
+            done = true;
             return;
 
         }
@@ -848,8 +882,11 @@ namespace LogParser
 
         private void uploadBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            lbl_statusTxt.Text = "Done";
-            MessageBox.Show("Done!!");
+            if (done)
+            {
+                lbl_statusTxt.Text = "Done";
+                MessageBox.Show("Done! This raid should be viewable on the site in 1-3 minutes.", "Done uploading");
+            }
         }
 
         #endregion // Progress
