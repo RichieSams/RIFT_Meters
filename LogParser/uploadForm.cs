@@ -60,6 +60,14 @@ namespace LogParser
         // Encounter Dictionary
         Dictionary<int, entityDef> encDict;
 
+        // Raid Dictionary
+        struct raidDef
+        {
+            public string id;
+            public string time;
+        }
+        Dictionary<int, raidDef> raidDict;
+
         // Login
         Boolean loggedIn = false;
 
@@ -74,6 +82,12 @@ namespace LogParser
         UInt16 npcID = 4001; // 4001-7000
         UInt16 npcPetID = 7001; // 7001-9000
         Dictionary<UInt64, UInt16> ids;
+
+        // Bosses
+        String[] GSBbosses= {"Duke Letareus", "Infiltrator Johlen", "Oracle Aleria", "Prince Hylas", "Lord Greenscale"};
+        String[] ROSbosses= {"Dark Focus", "Warmaster Galenir", "Plutonus the Immortal", "Herald Gaurath", "Alsbeth the Discordant"};
+        String[] GPbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim King Molinar"};
+        String[] HKbosses= {"Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Akylios"};
 
         #endregion // Variables
 
@@ -217,6 +231,17 @@ namespace LogParser
                         // File verification
                         if (logDir.Substring(logDir.Length - 4) == ".txt")
                         {
+                            // Disable editing while uploading
+                            txt_pass.Enabled = false;
+                            txt_userName.Enabled = false;
+                            loginButton.Enabled = false;
+                            txt_fileDir.Enabled = false;
+                            fileBrowseButton.Enabled = false;
+                            txt_month.Enabled = false;
+                            txt_day.Enabled = false;
+                            txt_year.Enabled = false;
+                            uploadButton.Enabled = false;
+
                             // Turn on the status text
                             lbl_statusTxt.Show();
 
@@ -306,17 +331,20 @@ namespace LogParser
             #region Parsing
 
             double progress = 0;
+            int raidNum = 1;
+            int raidID = 0;
+
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
             encDict = new Dictionary<int, entityDef>();
             ids = new Dictionary<UInt64, UInt16>();
+            raidDict = new Dictionary<int, raidDef>();
 
 
             try
             {
                 String logDir = (String)e.Argument;
                 int lineCount = File.ReadLines(logDir).Count();
-                
 
                 // Open combat log file
                 FileStream fs = new FileStream(logDir, FileMode.Open, FileAccess.Read);
@@ -338,6 +366,7 @@ namespace LogParser
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineCounter++;
+                    
                     // Initiate the data containers
                     String SourceID = "\\N";
                     String SourceName = "\\N";
@@ -364,7 +393,6 @@ namespace LogParser
                         {
                             startTime = Time;
                             startDateTime = DateTime.Parse(startTime);
-                            dataWriter.WriteLine(txt_year.Text + "-" + txt_month.Text + "-" + txt_day.Text + " " + startTime);
                         }
                     }
 
@@ -527,12 +555,101 @@ namespace LogParser
                             {
                                 encNpc = npc;
                             }
+
                             // Store Line
                             if (NPCID > 0 || NPCList.Count > 0)
                                 index = encArray.Add(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
                             // Add or update NPC List
                             if (NPCID > 0)
                             {
+                                raidDef tempRaid = new raidDef();
+                                // Check for raid bosses to determine what instance
+                                if (GSBbosses.Contains(npc.name))
+                                {
+                                    if (raidID!=1)
+                                    {
+                                        if (raidID == 0)
+                                        {
+                                            raidID = 1;
+                                            tempRaid.id = "1";
+                                            tempRaid.time = startTime;
+                                            raidDict.Add(1, tempRaid);
+                                        }
+                                        else
+                                        {
+                                            raidNum++;
+                                            raidID = 1;
+                                            tempRaid.id = "1";
+                                            tempRaid.time = encNpc.startTime;
+                                            raidDict.Add(1, tempRaid);
+                                        }
+                                    }
+                                    
+                                }
+                                else if (ROSbosses.Contains(npc.name))
+                                {
+                                    if (raidID != 2)
+                                    {
+                                        if (raidID == 0)
+                                        {
+                                            raidID = 2;
+                                            tempRaid.id = "2";
+                                            tempRaid.time = startTime;
+                                            raidDict.Add(2, tempRaid);
+                                        }
+                                        else
+                                        {
+                                            raidNum++;
+                                            raidID = 2;
+                                            tempRaid.id = "2";
+                                            tempRaid.time = encNpc.startTime;
+                                            raidDict.Add(2, tempRaid);
+                                        }
+                                    }
+                                }
+                                else if (GPbosses.Contains(npc.name))
+                                {
+                                    if (raidID != 3)
+                                    {
+                                        if (raidID == 0)
+                                        {
+                                            raidID = 3;
+                                            tempRaid.id = "3";
+                                            tempRaid.time = startTime;
+                                            raidDict.Add(3, tempRaid);
+                                        }
+                                        else
+                                        {
+                                            raidNum++;
+                                            raidID = 3;
+                                            tempRaid.id = "3";
+                                            tempRaid.time = encNpc.startTime;
+                                            raidDict.Add(3, tempRaid);
+                                        }
+                                    }
+                                }
+                                else if (HKbosses.Contains(npc.name))
+                                {
+                                    if (raidID != 4)
+                                    {
+                                        if (raidID == 0)
+                                        {
+                                            raidID = 4;
+                                            tempRaid.id = "4";
+                                            tempRaid.time = startTime;
+                                            raidDict.Add(4, tempRaid);
+                                        }
+                                        else
+                                        {
+                                            raidNum++;
+                                            raidID = 4;
+                                            tempRaid.id = "4";
+                                            tempRaid.time = encNpc.startTime;
+                                            raidDict.Add(4, tempRaid);
+                                        }
+                                    }
+                                }
+
                                 // Update last known NPC time and index
                                 lastNPCTime lastNpc = new lastNPCTime(logTime, index);
                                 if (NPCList.ContainsKey(NPCID))
@@ -587,7 +704,7 @@ namespace LogParser
                                     // Print all rows part of the encounter
                                     while (lastIndex >= 0)
                                     {
-                                        dataWriter.WriteLine(encArray[0] + encNum.ToString() + ",");
+                                        dataWriter.WriteLine(raidNum.ToString() + encArray[0] + encNum.ToString() + ",");
                                         encArray.RemoveAt(0);
                                         endTime = ((string)encArray[0]).Substring(0, 8);
                                         lastIndex--;
@@ -597,7 +714,7 @@ namespace LogParser
                                     lastIndex = encArray.Count;
                                     while (lastIndex > 0)
                                     {
-                                        dataWriter.WriteLine(encArray[0] + "0,");
+                                        dataWriter.WriteLine(raidNum.ToString() + encArray[0] + "0,");
                                         encArray.RemoveAt(0);
                                         lastIndex--;
                                     }
@@ -609,7 +726,7 @@ namespace LogParser
                             else
                             {
                                 // Write the data to the csv file
-                                dataWriter.WriteLine(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
+                                dataWriter.WriteLine(raidNum + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
 
                         }
@@ -627,25 +744,25 @@ namespace LogParser
                 return;
             }
 
-            result = Client.DownloadData("http://personaguild.com/publicRiftLogs/bossList.php");
-            k = Encoding.UTF8.GetString(result, 0, result.Length);
-
-            String[] bosses = k.Split(',');
-            Boolean bossBool = false;
-
-            foreach (KeyValuePair<string, entityDef> kvp in entityDict)
-            {
-                if (bosses.Contains(kvp.Value.name))
-                {
-                    bossBool = true;
-                    break;
-                }
-            }
-
-            if (!bossBool)
+            if (raidID == 0)
             {
                 MessageBox.Show("The combat log contains no raid bosses. Only upload raid combat logs", "No raid bosses found");
                 return;
+            }
+
+            try
+            {
+                TextWriter defWriter = new StreamWriter("definitions.txt");
+                defWriter.Write(txt_year.Text + "-" + txt_month.Text + "-" + txt_day.Text + "%");
+                foreach (KeyValuePair<int, raidDef> kvp in raidDict)
+                {
+                    defWriter.Write(kvp.Key + ">" + kvp.Value.id + "," + kvp.Value.time + "*");
+                }
+                defWriter.Close();
+            }
+            catch (IOException)
+            {
+
             }
 
             try
@@ -716,7 +833,7 @@ namespace LogParser
             zipStream.SetLevel(9); //0-9, 9 being the highest level of compression
             //zipStream.Password = "ok";
 
-            string[] files = { @"data.csv", @"spell.csv", @"entity.csv", @"encounter.csv"};
+            string[] files = { @"data.csv", @"spell.csv", @"entity.csv", @"encounter.csv", @"definitions.txt"};
             foreach (string inputFn in files)
             {
                 FileInfo fi = new FileInfo(inputFn);
@@ -886,6 +1003,17 @@ namespace LogParser
             {
                 lbl_statusTxt.Text = "Done";
                 MessageBox.Show("Done! This raid should be viewable on the site in 1-3 minutes.", "Done uploading");
+
+                // Disable editing while uploading
+                txt_pass.Enabled = true;
+                txt_userName.Enabled = true;
+                loginButton.Enabled = true;
+                txt_fileDir.Enabled = true;
+                fileBrowseButton.Enabled = true;
+                txt_month.Enabled = true;
+                txt_day.Enabled = true;
+                txt_year.Enabled = true;
+                uploadButton.Enabled = true;
             }
         }
 
