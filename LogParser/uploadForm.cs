@@ -731,7 +731,7 @@ namespace LogParser
                                 encDict.Add(encNum, encNpc);
                                 encNum++;
                             }
-                            else // NPCList.Count == 0
+                            else if (NPCList.Count == 0 && !removedNPC)
                             {
                                 // Write the data to the csv file
                                 dataWriter.WriteLine(raidNum.ToString() + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
