@@ -721,7 +721,7 @@ namespace LogParser
                                 lastIndex = encArray.Count;
                                 while (lastIndex > 0)
                                 {
-                                    dataWriter.WriteLine(raidNum + "," + encArray[0] + "0,");
+                                    dataWriter.WriteLine(raidNum.ToString() + encArray[0] + "0,");
                                     encArray.RemoveAt(0);
                                     lastIndex--;
                                 }
@@ -732,13 +732,11 @@ namespace LogParser
                             else // NPCList.Count == 0
                             {
                                 // Write the data to the csv file
-                                dataWriter.WriteLine(raidNum + "," + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
+                                dataWriter.WriteLine(raidNum.ToString() + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
 
                         }
                     }
-
-                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 33));
 
                 }
                 // Close the csv file
@@ -747,12 +745,32 @@ namespace LogParser
             catch (IOException)
             {
                 MessageBox.Show("File does not exist or was entered incorrectly. Please enter a file or browse to it, then retry.", "Incorrect file");
+                // Re-enable editing
+                txt_pass.Enabled = true;
+                txt_userName.Enabled = true;
+                loginButton.Enabled = true;
+                txt_fileDir.Enabled = true;
+                fileBrowseButton.Enabled = true;
+                txt_month.Enabled = true;
+                txt_day.Enabled = true;
+                txt_year.Enabled = true;
+                uploadButton.Enabled = true;
                 return;
             }
 
             if (raidID == 0)
             {
                 MessageBox.Show("The combat log contains no raid bosses. Only upload raid combat logs", "No raid bosses found");
+                // Re-enable editing
+                txt_pass.Enabled = true;
+                txt_userName.Enabled = true;
+                loginButton.Enabled = true;
+                txt_fileDir.Enabled = true;
+                fileBrowseButton.Enabled = true;
+                txt_month.Enabled = true;
+                txt_day.Enabled = true;
+                txt_year.Enabled = true;
+                uploadButton.Enabled = true;
                 return;
             }
 
@@ -1010,7 +1028,7 @@ namespace LogParser
                 lbl_statusTxt.Text = "Done";
                 MessageBox.Show("Done! This raid should be viewable on the site in 1-3 minutes.", "Done uploading");
 
-                // Disable editing while uploading
+                // Re-enable editing
                 txt_pass.Enabled = true;
                 txt_userName.Enabled = true;
                 loginButton.Enabled = true;
