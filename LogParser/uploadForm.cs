@@ -426,6 +426,8 @@ namespace LogParser
                             SourceOwnerID = getID(IntSourceOwnerID, 0);
                             TargetOwnerID = getID(IntTargetOwnerID, 0);
 
+                            bool removedNPC = false;
+
                             // Set names
                             string s;
                             SourceName = CodeList[5];
@@ -667,6 +669,7 @@ namespace LogParser
                                 {
                                     lastIndex = NPCList[tID].index;
                                     NPCList.Remove(tID);
+                                    removedNPC = true;
                                 }
                             }
                             // Remove NPCs that died (Might already be slain?)
@@ -676,6 +679,7 @@ namespace LogParser
                                 {
                                     lastIndex = NPCList[sID].index;
                                     NPCList.Remove(sID);
+                                    removedNPC = true;
                                 }
                             }
                             if (NPCList.Count > 0)
@@ -696,37 +700,39 @@ namespace LogParser
                                 // Remove from NPCList
                                 foreach (ulong key in toRemove) {
                                     NPCList.Remove(key);
-                                }
-                                // If no more NPCs then encounter over
-                                if (NPCList.Count == 0)
-                                {
-                                    string endTime = null;
-                                    // Print all rows part of the encounter
-                                    while (lastIndex >= 0)
-                                    {
-                                        dataWriter.WriteLine(raidNum.ToString() + encArray[0] + encNum.ToString() + ",");
-                                        encArray.RemoveAt(0);
-                                        endTime = ((string)encArray[0]).Substring(0, 8);
-                                        lastIndex--;
-                                    }
-                                    encNpc.endTime = endTime;
-                                    // Print extra rows that got caught up
-                                    lastIndex = encArray.Count;
-                                    while (lastIndex > 0)
-                                    {
-                                        dataWriter.WriteLine(raidNum.ToString() + encArray[0] + "0,");
-                                        encArray.RemoveAt(0);
-                                        lastIndex--;
-                                    }
-                                    // Add encounter to encounter Dictionary
-                                    encDict.Add(encNum, encNpc);
-                                    encNum++;
+                                    removedNPC = true;
                                 }
                             }
-                            else
+                            
+                            // If no more NPCs then encounter over
+                            if (NPCList.Count == 0 && removedNPC)
+                            {
+                                string endTime = null;
+                                // Print all rows part of the encounter
+                                while (lastIndex >= 0)
+                                {
+                                    dataWriter.WriteLine(raidNum.ToString() + encArray[0] + encNum.ToString() + ",");
+                                    encArray.RemoveAt(0);
+                                    endTime = ((string)encArray[0]).Substring(0, 8);
+                                    lastIndex--;
+                                }
+                                encNpc.endTime = endTime;
+                                // Print extra rows that got caught up
+                                lastIndex = encArray.Count;
+                                while (lastIndex > 0)
+                                {
+                                    dataWriter.WriteLine(raidNum + "," + encArray[0] + "0,");
+                                    encArray.RemoveAt(0);
+                                    lastIndex--;
+                                }
+                                // Add encounter to encounter Dictionary
+                                encDict.Add(encNum, encNpc);
+                                encNum++;
+                            }
+                            else // NPCList.Count == 0
                             {
                                 // Write the data to the csv file
-                                dataWriter.WriteLine(raidNum + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
+                                dataWriter.WriteLine(raidNum + "," + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
 
                         }
