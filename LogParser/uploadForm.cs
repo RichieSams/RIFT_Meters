@@ -721,7 +721,7 @@ namespace LogParser
                                 lastIndex = encArray.Count;
                                 while (lastIndex > 0)
                                 {
-                                    dataWriter.WriteLine(raidNum + "," + encArray[0] + "0,");
+                                    dataWriter.WriteLine(raidNum.ToString() + encArray[0] + "0,");
                                     encArray.RemoveAt(0);
                                     lastIndex--;
                                 }
@@ -732,7 +732,7 @@ namespace LogParser
                             else // NPCList.Count == 0
                             {
                                 // Write the data to the csv file
-                                dataWriter.WriteLine(raidNum + "," + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
+                                dataWriter.WriteLine(raidNum.ToString() + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
 
                         }
