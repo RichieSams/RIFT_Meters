@@ -712,7 +712,7 @@ namespace LogParser
                                 // Print all rows part of the encounter
                                 while (lastIndex > 0)
                                 {
-                                    dataWriter.WriteLine(raidNum.ToString() + encArray[0] + encNum.ToString() + ",");
+                                    dataWriter.WriteLine(raidNum.ToString() + ">" + encArray[0] + encNum.ToString() + ",");
                                     encArray.RemoveAt(0);
                                     endTime = ((string)encArray[0]).Substring(0, 8);
                                     lastIndex--;
@@ -722,7 +722,7 @@ namespace LogParser
                                 lastIndex = encArray.Count;
                                 while (lastIndex > 0)
                                 {
-                                    dataWriter.WriteLine(raidNum.ToString() + encArray[0] + "0,");
+                                    dataWriter.WriteLine(raidNum.ToString() + ">" + encArray[0] + "0,");
                                     encArray.RemoveAt(0);
                                     lastIndex--;
                                 }
@@ -734,7 +734,7 @@ namespace LogParser
                             else if (NPCList.Count == 0 && !removedNPC)
                             {
                                 // Write the data to the csv file
-                                dataWriter.WriteLine(raidNum.ToString() + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
+                                dataWriter.WriteLine(raidNum.ToString() + ">" + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
                             }
 
                         }
