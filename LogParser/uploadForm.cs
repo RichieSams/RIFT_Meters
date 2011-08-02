@@ -709,7 +709,7 @@ namespace LogParser
                             {
                                 string endTime = null;
                                 // Print all rows part of the encounter
-                                while (lastIndex >= 0)
+                                while (lastIndex > 0)
                                 {
                                     dataWriter.WriteLine(raidNum.ToString() + encArray[0] + encNum.ToString() + ",");
                                     encArray.RemoveAt(0);
