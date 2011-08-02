@@ -54,6 +54,7 @@ namespace LogParser
             public string name;
             public string startTime;
             public string endTime;
+            public string raidNum;
         }
         Dictionary<string, entityDef> entityDict;
 
@@ -726,6 +727,7 @@ namespace LogParser
                                     lastIndex--;
                                 }
                                 // Add encounter to encounter Dictionary
+                                encNpc.raidNum = raidNum.ToString();
                                 encDict.Add(encNum, encNpc);
                                 encNum++;
                             }
@@ -831,7 +833,7 @@ namespace LogParser
 
                 foreach (KeyValuePair<int, entityDef> kvp in encDict)
                 {
-                    encWriter.WriteLine(kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
+                    encWriter.WriteLine(kvp.Value.raidNum + "," + kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
                 }
 
                 encWriter.Close();
