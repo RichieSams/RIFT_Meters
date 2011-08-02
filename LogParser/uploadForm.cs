@@ -740,6 +740,8 @@ namespace LogParser
                         }
                     }
 
+                    uploadBackgroundWorker.ReportProgress((int)((++progress / lineCount) * 33));
+
                 }
                 // Close the csv file
                 dataWriter.Close();
