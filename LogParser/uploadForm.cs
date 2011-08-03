@@ -727,9 +727,12 @@ namespace LogParser
                                     lastIndex--;
                                 }
                                 // Add encounter to encounter Dictionary
-                                encNpc.raidNum = raidNum.ToString();
-                                encDict.Add(encNum, encNpc);
-                                encNum++;
+                                if (endTime != null)
+                                {
+                                    encNpc.raidNum = raidNum.ToString();
+                                    encDict.Add(encNum, encNpc);
+                                    encNum++;
+                                }
                             }
                             else if (NPCList.Count == 0 && !removedNPC)
                             {
