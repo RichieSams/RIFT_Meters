@@ -662,7 +662,7 @@ namespace LogParser
                                     NPCList.Add(NPCID, lastNpc);
                             }
                             int lastIndex = 0;
-                            // Remove NPCs were slain (Can sometimes slay themselves?)
+                            /*// Remove NPCs were slain (Can sometimes slay themselves?)
                             if (int.Parse(CodeList[0]) == 11) 
                             {
                                 tID = (TargetID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetID));
@@ -682,7 +682,7 @@ namespace LogParser
                                     NPCList.Remove(sID);
                                     removedNPC = true;
                                 }
-                            }
+                            }*/
                             if (NPCList.Count > 0)
                             {
                                 // Remove NPCs that died or havent been heard from in a while
