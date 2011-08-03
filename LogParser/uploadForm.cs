@@ -78,17 +78,17 @@ namespace LogParser
         byte[] result;
 
         // IDs
-        UInt16 playerID = 1; // 1-2000
-        UInt16 playerPetID = 2001; // 2001-4000
-        UInt16 npcID = 4001; // 4001-7000
-        UInt16 npcPetID = 7001; // 7001-9000
+        UInt16 playerID = 1; // 1-3000
+        UInt16 playerPetID = 3001; // 3001-5000
+        UInt16 npcID = 5001; // 5001-10000
+        UInt16 npcPetID = 10001; // 10001-12000
         Dictionary<UInt64, UInt16> ids;
 
         // Bosses
         String[] GSBbosses= {"Duke Letareus", "Infiltrator Johlen", "Oracle Aleria", "Prince Hylas", "Lord Greenscale"};
         String[] ROSbosses= {"Dark Focus", "Warmaster Galenir", "Plutonus the Immortal", "Herald Gaurath", "Alsbeth the Discordant"};
-        String[] GPbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim King Molinar"};
-        String[] HKbosses= {"Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Akylios"};
+        String[] GPbosses= {"Anrak The Foul", "Guurloth", "Thalguur", "Uruluuk"};
+        String[] HKbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim", "Rune King Molinar", "Prince Dollin", "Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Lord Jornaru", "Akylios"};
 
         #endregion // Variables
 
@@ -523,9 +523,9 @@ namespace LogParser
                             entityDef npc = new entityDef();
 
                             // Source is a enemy NPC targetting a friendly
-                            if (sID >= 4001 && sID <= 9000)
+                            if (sID >= 5001 && sID <= 12000)
                             {
-                                if (tID >= 1 && tID <= 4000)
+                                if (tID >= 1 && tID <= 5000)
                                 {
                                     // Ignore rez spells because they currently count as an npc
                                     if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
@@ -538,9 +538,9 @@ namespace LogParser
                                 }
                             }
                             // Target is a enemy NPC from a friendly source
-                            else if (tID >= 4001 && tID <= 9000)
+                            else if (tID >= 5001 && tID <= 12000)
                             {
-                                if (sID >= 1 && sID <= 4000)
+                                if (sID >= 1 && sID <= 5000)
                                 {
                                     // Ignore rez spells because they currently count as an npc
                                     if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
@@ -576,7 +576,7 @@ namespace LogParser
                                             raidID = 1;
                                             tempRaid.id = "1";
                                             tempRaid.time = startTime;
-                                            raidDict.Add(1, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                         else
                                         {
@@ -584,7 +584,7 @@ namespace LogParser
                                             raidID = 1;
                                             tempRaid.id = "1";
                                             tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(1, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                     }
                                     
@@ -598,7 +598,7 @@ namespace LogParser
                                             raidID = 2;
                                             tempRaid.id = "2";
                                             tempRaid.time = startTime;
-                                            raidDict.Add(2, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                         else
                                         {
@@ -606,7 +606,7 @@ namespace LogParser
                                             raidID = 2;
                                             tempRaid.id = "2";
                                             tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(2, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                     }
                                 }
@@ -619,7 +619,7 @@ namespace LogParser
                                             raidID = 3;
                                             tempRaid.id = "3";
                                             tempRaid.time = startTime;
-                                            raidDict.Add(3, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                         else
                                         {
@@ -627,7 +627,7 @@ namespace LogParser
                                             raidID = 3;
                                             tempRaid.id = "3";
                                             tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(3, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                     }
                                 }
@@ -640,7 +640,7 @@ namespace LogParser
                                             raidID = 4;
                                             tempRaid.id = "4";
                                             tempRaid.time = startTime;
-                                            raidDict.Add(4, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                         else
                                         {
@@ -648,7 +648,7 @@ namespace LogParser
                                             raidID = 4;
                                             tempRaid.id = "4";
                                             tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(4, tempRaid);
+                                            raidDict.Add(raidNum, tempRaid);
                                         }
                                     }
                                 }
@@ -969,10 +969,10 @@ namespace LogParser
             #endregion // FileHandler
 
             // Reset ID incrementors and array
-            playerID = 1;
-            playerPetID = 2001;
-            npcID = 4001;
-            npcPetID = 7001;
+            playerID = 1; // 1-3000
+            playerPetID = 3001; // 3001-5000
+            npcID = 5001; // 5001-10000
+            npcPetID = 10001; // 10001-12000
 
             done = true;
             return;
