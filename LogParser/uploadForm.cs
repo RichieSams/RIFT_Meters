@@ -82,7 +82,7 @@ namespace LogParser
         UInt16 playerPetID = 3001; // 3001-5000
         UInt16 npcID = 5001; // 5001-10000
         UInt16 npcPetID = 10001; // 10001-12000
-        Dictionary<UInt64, UInt16> ids;
+        Dictionary<string, UInt16> ids;
 
         // Bosses
         String[] GSBbosses= {"Duke Letareus", "Infiltrator Johlen", "Oracle Aleria", "Prince Hylas", "Lord Greenscale"};
@@ -275,8 +275,63 @@ namespace LogParser
 
         #region Work
 
-        private String getID(UInt64 origID, UInt64 ownerID)
+        private String getID(UInt64 origID, UInt64 ownerID, string name)
         {
+            string key = ownerID.ToString() + name;
+            // Return null if the id is originally zero
+            if (origID == 0)
+            {
+                return "\\N";
+            }
+            else
+            {
+                // Check if it is a pet
+                if (ownerID == 0)
+                {
+                    // Check if it is a npc or a player
+                    if (origID > 8000000000000000000)
+                    {
+                        if (!(ids.ContainsKey(key)))
+                        {
+                            ids.Add(key, npcID++);
+                        }
+                        return ids[key].ToString();
+                    }
+                    else
+                    {
+                        if (!(ids.ContainsKey(key)))
+                        {
+                            ids.Add(key, playerID++);
+                        }
+                        return ids[key].ToString();
+                    }
+                }
+                else
+                {
+                    // Check if it is a npc or a player
+                    if (ownerID > 8000000000000000000)
+                    {
+                        if (!(ids.ContainsKey(key)))
+                        {
+                            ids.Add(key, npcPetID++);
+                        }
+                        return ids[key].ToString();
+                    }
+                    else
+                    {
+                        if (!(ids.ContainsKey(key)))
+                        {
+                            ids.Add(key, playerPetID++);
+                        }
+                        return ids[key].ToString();
+                    }
+                }
+            }
+        }
+
+        /*private String getID(UInt64 origID, UInt64 ownerID, string name)
+        {
+            string key = ownerID.ToString() + name;
             // Return null if the id is originally zero
             if (origID == 0)
             {
@@ -326,7 +381,7 @@ namespace LogParser
                     }
                 }
             }
-        }
+        }*/
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -339,7 +394,7 @@ namespace LogParser
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
             encDict = new Dictionary<int, entityDef>();
-            ids = new Dictionary<UInt64, UInt16>();
+            ids = new Dictionary<string, UInt16>();
             raidDict = new Dictionary<int, raidDef>();
 
 
@@ -423,11 +478,6 @@ namespace LogParser
                             UInt64 IntSourceOwnerID = Convert.ToUInt64(CodeList[3].Split('#')[2]);
                             UInt64 IntTargetOwnerID = Convert.ToUInt64(CodeList[4].Split('#')[2]);
 
-                            SourceID = getID(IntSourceID, IntSourceOwnerID);
-                            TargetID = getID(IntTargetID, IntTargetOwnerID);
-                            SourceOwnerID = getID(IntSourceOwnerID, 0);
-                            TargetOwnerID = getID(IntTargetOwnerID, 0);
-
                             bool removedNPC = false;
 
                             // Set names
@@ -456,6 +506,12 @@ namespace LogParser
                                 GroupCollection g = m.Groups;
                                 Element = g[1].Captures[0].Value;
                             }
+
+                            // Generate new IDs
+                            SourceID = getID(IntSourceID, IntSourceOwnerID, SourceName);
+                            TargetID = getID(IntTargetID, IntTargetOwnerID, TargetName);
+                            SourceOwnerID = getID(IntSourceOwnerID, 0, "");
+                            TargetOwnerID = getID(IntTargetOwnerID, 0, "");
 
                             // Generate Entity
                             if (!entityDict.ContainsKey(SourceID))
