@@ -89,7 +89,7 @@ namespace LogParser
         String[] ROSbosses= {"Dark Focus", "Warmaster Galenir", "Plutonus the Immortal", "Herald Gaurath", "Alsbeth the Discordant"};
         String[] GPbosses= {"Anrak The Foul", "Guurloth", "Thalguur", "Uruluuk"};
         String[] HKbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim", "Rune King Molinar", "Prince Dollin", "Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Lord Jornaru", "Akylios"};
-        String[] DHbosses = {"Assault Commander Jorb", "Joloral Ragetide", "Isskal", "Hydriss"};
+        String[] DHbosses = {"Assault Commander Jorb", "Joloral Ragetide", "Isskal", "High Priestess Hydriss"};
 
         #endregion // Variables
 
