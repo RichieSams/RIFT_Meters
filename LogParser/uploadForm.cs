@@ -311,19 +311,19 @@ namespace LogParser
                     // Check if it is a npc or a player
                     if (ownerID > 8000000000000000000)
                     {
-                        if (!(ids.ContainsKey(origID)))
+                        if (!(ids.ContainsKey(key)))
                         {
-                            ids.Add(origID, npcPetID++);
+                            ids.Add(key, npcPetID++);
                         }
-                        return ids[origID].ToString();
+                        return ids[key].ToString();
                     }
                     else
                     {
-                        if (!(ids.ContainsKey(origID)))
+                        if (!(ids.ContainsKey(key)))
                         {
-                            ids.Add(origID, playerPetID++);
+                            ids.Add(key, playerPetID++);
                         }
-                        return ids[origID].ToString();
+                        return ids[key].ToString();
                     }
                 }
             }
@@ -394,7 +394,7 @@ namespace LogParser
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
             encDict = new Dictionary<int, entityDef>();
-            ids = new Dictionary<UInt64, UInt16>();
+            ids = new Dictionary<string, UInt16>();
             raidDict = new Dictionary<int, raidDef>();
 
 
@@ -478,11 +478,6 @@ namespace LogParser
                             UInt64 IntSourceOwnerID = Convert.ToUInt64(CodeList[3].Split('#')[2]);
                             UInt64 IntTargetOwnerID = Convert.ToUInt64(CodeList[4].Split('#')[2]);
 
-                            SourceID = getID(IntSourceID, IntSourceOwnerID, SourceName);
-                            TargetID = getID(IntTargetID, IntTargetOwnerID, TargetName);
-                            SourceOwnerID = getID(IntSourceOwnerID, 0, "");
-                            TargetOwnerID = getID(IntTargetOwnerID, 0, "");
-
                             bool removedNPC = false;
 
                             // Set names
@@ -511,6 +506,12 @@ namespace LogParser
                                 GroupCollection g = m.Groups;
                                 Element = g[1].Captures[0].Value;
                             }
+
+                            // Generate new IDs
+                            SourceID = getID(IntSourceID, IntSourceOwnerID, SourceName);
+                            TargetID = getID(IntTargetID, IntTargetOwnerID, TargetName);
+                            SourceOwnerID = getID(IntSourceOwnerID, 0, "");
+                            TargetOwnerID = getID(IntTargetOwnerID, 0, "");
 
                             // Generate Entity
                             if (!entityDict.ContainsKey(SourceID))
