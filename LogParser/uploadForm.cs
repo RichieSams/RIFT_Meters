@@ -274,7 +274,7 @@ namespace LogParser
 
         #region Work
 
-        private String getID(UInt64 origID, UInt64 ownerID)
+        private String getID(UInt64 origID, UInt64 ownerID, string name)
         {
             // Return null if the id is originally zero
             if (origID == 0)
@@ -422,10 +422,10 @@ namespace LogParser
                             UInt64 IntSourceOwnerID = Convert.ToUInt64(CodeList[3].Split('#')[2]);
                             UInt64 IntTargetOwnerID = Convert.ToUInt64(CodeList[4].Split('#')[2]);
 
-                            SourceID = getID(IntSourceID, IntSourceOwnerID);
-                            TargetID = getID(IntTargetID, IntTargetOwnerID);
-                            SourceOwnerID = getID(IntSourceOwnerID, 0);
-                            TargetOwnerID = getID(IntTargetOwnerID, 0);
+                            SourceID = getID(IntSourceID, IntSourceOwnerID, SourceName);
+                            TargetID = getID(IntTargetID, IntTargetOwnerID, TargetName);
+                            SourceOwnerID = getID(IntSourceOwnerID, 0, "");
+                            TargetOwnerID = getID(IntTargetOwnerID, 0, "");
 
                             bool removedNPC = false;
 
