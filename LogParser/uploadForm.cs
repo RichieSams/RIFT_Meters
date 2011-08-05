@@ -277,7 +277,11 @@ namespace LogParser
 
         private String getID(UInt64 origID, UInt64 ownerID, string name)
         {
-            string key = ownerID.ToString() + name;
+            string key = null;
+            if (ownerID == 0)
+                key = origID.ToString();
+            else
+                key = ownerID.ToString() + name;
             // Return null if the id is originally zero
             if (origID == 0)
             {
