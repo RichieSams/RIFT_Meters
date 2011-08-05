@@ -582,6 +582,7 @@ namespace LogParser
                                         else
                                         {
                                             raidNum++;
+                                            encNum = 1;
                                             raidID = 1;
                                             tempRaid.id = "1";
                                             tempRaid.time = encNpc.startTime;
@@ -604,6 +605,7 @@ namespace LogParser
                                         else
                                         {
                                             raidNum++;
+                                            encNum = 1;
                                             raidID = 2;
                                             tempRaid.id = "2";
                                             tempRaid.time = encNpc.startTime;
@@ -625,6 +627,7 @@ namespace LogParser
                                         else
                                         {
                                             raidNum++;
+                                            encNum = 1;
                                             raidID = 3;
                                             tempRaid.id = "3";
                                             tempRaid.time = encNpc.startTime;
@@ -646,6 +649,7 @@ namespace LogParser
                                         else
                                         {
                                             raidNum++;
+                                            encNum = 1;
                                             raidID = 4;
                                             tempRaid.id = "4";
                                             tempRaid.time = encNpc.startTime;
@@ -667,6 +671,7 @@ namespace LogParser
                                         else
                                         {
                                             raidNum++;
+                                            encNum = 1;
                                             raidID = 5;
                                             tempRaid.id = "5";
                                             tempRaid.time = encNpc.startTime;
