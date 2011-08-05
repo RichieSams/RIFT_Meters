@@ -82,7 +82,7 @@ namespace LogParser
         UInt16 playerPetID = 3001; // 3001-5000
         UInt16 npcID = 5001; // 5001-10000
         UInt16 npcPetID = 10001; // 10001-12000
-        Dictionary<UInt64, UInt16> ids;
+        Dictionary<string, UInt16> ids;
 
         // Bosses
         String[] GSBbosses= {"Duke Letareus", "Infiltrator Johlen", "Oracle Aleria", "Prince Hylas", "Lord Greenscale"};
@@ -277,6 +277,61 @@ namespace LogParser
 
         private String getID(UInt64 origID, UInt64 ownerID, string name)
         {
+            string key = ownerID.ToString() + name;
+            // Return null if the id is originally zero
+            if (origID == 0)
+            {
+                return "\\N";
+            }
+            else
+            {
+                // Check if it is a pet
+                if (ownerID == 0)
+                {
+                    // Check if it is a npc or a player
+                    if (origID > 8000000000000000000)
+                    {
+                        if (!(ids.ContainsKey(key)))
+                        {
+                            ids.Add(key, npcID++);
+                        }
+                        return ids[key].ToString();
+                    }
+                    else
+                    {
+                        if (!(ids.ContainsKey(key)))
+                        {
+                            ids.Add(key, playerID++);
+                        }
+                        return ids[key].ToString();
+                    }
+                }
+                else
+                {
+                    // Check if it is a npc or a player
+                    if (ownerID > 8000000000000000000)
+                    {
+                        if (!(ids.ContainsKey(origID)))
+                        {
+                            ids.Add(origID, npcPetID++);
+                        }
+                        return ids[origID].ToString();
+                    }
+                    else
+                    {
+                        if (!(ids.ContainsKey(origID)))
+                        {
+                            ids.Add(origID, playerPetID++);
+                        }
+                        return ids[origID].ToString();
+                    }
+                }
+            }
+        }
+
+        /*private String getID(UInt64 origID, UInt64 ownerID, string name)
+        {
+            string key = ownerID.ToString() + name;
             // Return null if the id is originally zero
             if (origID == 0)
             {
@@ -326,7 +381,7 @@ namespace LogParser
                     }
                 }
             }
-        }
+        }*/
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
