@@ -840,7 +840,7 @@ namespace LogParser
 
                 foreach (KeyValuePair<int, entityDef> kvp in encDict)
                 {
-                    encWriter.WriteLine(kvp.Value.raidNum + "," + kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
+                    encWriter.WriteLine(kvp.Value.raidNum + ">" + kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
                 }
 
                 encWriter.Close();
