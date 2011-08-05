@@ -89,6 +89,7 @@ namespace LogParser
         String[] ROSbosses= {"Dark Focus", "Warmaster Galenir", "Plutonus the Immortal", "Herald Gaurath", "Alsbeth the Discordant"};
         String[] GPbosses= {"Anrak The Foul", "Guurloth", "Thalguur", "Uruluuk"};
         String[] HKbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim", "Rune King Molinar", "Prince Dollin", "Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Lord Jornaru", "Akylios"};
+        String[] DHbosses = {"Assault Commander Jorb", "Joloral Ragetide", "Isskal", "Hydriss"};
 
         #endregion // Variables
 
@@ -652,6 +653,27 @@ namespace LogParser
                                         }
                                     }
                                 }
+                                else if (DHbosses.Contains(npc.name))
+                                {
+                                    if (raidID != 5)
+                                    {
+                                        if (raidID == 0)
+                                        {
+                                            raidID = 5;
+                                            tempRaid.id = "5";
+                                            tempRaid.time = startTime;
+                                            raidDict.Add(raidNum, tempRaid);
+                                        }
+                                        else
+                                        {
+                                            raidNum++;
+                                            raidID = 5;
+                                            tempRaid.id = "5";
+                                            tempRaid.time = encNpc.startTime;
+                                            raidDict.Add(raidNum, tempRaid);
+                                        }
+                                    }
+                                }
 
                                 // Update last known NPC time and index
                                 lastNPCTime lastNpc = new lastNPCTime(logTime, index);
@@ -818,7 +840,7 @@ namespace LogParser
 
                 foreach (KeyValuePair<int, entityDef> kvp in encDict)
                 {
-                    encWriter.WriteLine(kvp.Value.raidNum + "," + kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
+                    encWriter.WriteLine(kvp.Value.raidNum + ">" + kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
                 }
 
                 encWriter.Close();
