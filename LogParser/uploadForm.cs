@@ -9,7 +9,6 @@ using System.Windows.Forms;
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
-using ICSharpCode.SharpZipLib.BZip2;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Security.Cryptography;
