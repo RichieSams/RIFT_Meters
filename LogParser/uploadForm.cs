@@ -1110,6 +1110,13 @@ namespace LogParser
                 lbl_statusTxt.Text = "Done";
                 MessageBox.Show("Done! This raid should be viewable on the site in 1-3 minutes.", "Done uploading");
             }
+            // Delete files
+            File.Delete(Application.StartupPath + "\\data.csv");
+            File.Delete(Application.StartupPath + "\\encounter.csv");
+            File.Delete(Application.StartupPath + "\\entity.csv");
+            File.Delete(Application.StartupPath + "\\spell.csv");
+            File.Delete(Application.StartupPath + "\\definitions.txt");
+            File.Delete(Application.StartupPath + "\\temp.zip");
             // Re-enable editing
             txt_pass.Enabled = true;
             txt_userName.Enabled = true;
