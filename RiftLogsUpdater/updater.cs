@@ -26,10 +26,13 @@ namespace RiftLogsUpdater
 
         private void updater_Load(object sender, EventArgs e)
         {
+            // Make sure LogParser.exe is completely closed before updating
             while (Process.GetProcessesByName("LogParser").Length > 0)
             {
                 Thread.Sleep(100);
             }
+
+            // Download the new files
             client.DownloadFileCompleted += new AsyncCompletedEventHandler(downloadCompleted);
             client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(downloadProgressChanged);
             client.DownloadFileAsync(new Uri("http://www.personaguild.com/publicRiftLogs/update.zip"), "update.zip");
@@ -66,7 +69,6 @@ namespace RiftLogsUpdater
                     byte[] buffer = new byte[4096];
                     Stream zipStream = zf.GetInputStream(zipEntry);
 
-                    // Manipulate the output filename here as desired.
                     String fullZipToPath = Path.Combine(Application.StartupPath + "\\update", entryFileName);
                     string directoryName = Path.GetDirectoryName(fullZipToPath);
                     if (directoryName.Length > 0)
@@ -89,7 +91,7 @@ namespace RiftLogsUpdater
                 if (zf != null)
                 {
                     zf.IsStreamOwner = true; // Makes close also shut the underlying stream
-                    zf.Close(); // Ensure we release resources
+                    zf.Close();
                 }
             }
 
@@ -116,6 +118,7 @@ namespace RiftLogsUpdater
 
         private void updaterBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            // Re open LogParser and close the updater
             Process process = new Process();
             process.StartInfo.FileName = Path.Combine(Application.StartupPath, "LogParser.exe");
             process.Start();
