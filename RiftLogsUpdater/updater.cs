@@ -11,6 +11,7 @@ using System.IO;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using System.Diagnostics;
+using System.Threading;
 
 namespace RiftLogsUpdater
 {
@@ -25,6 +26,10 @@ namespace RiftLogsUpdater
 
         private void updater_Load(object sender, EventArgs e)
         {
+            while (Process.GetProcessesByName("LogParser").Length > 0)
+            {
+                Thread.Sleep(100);
+            }
             client.DownloadFileCompleted += new AsyncCompletedEventHandler(downloadCompleted);
             client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(downloadProgressChanged);
             client.DownloadFileAsync(new Uri("http://www.personaguild.com/publicRiftLogs/update.zip"), "update.zip");
