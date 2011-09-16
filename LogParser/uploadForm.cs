@@ -97,16 +97,24 @@ namespace LogParser
 
         private void riftLogsUploader_Load(object sender, EventArgs e)
         {
-            WebClient updateClient = new WebClient();
-            Stream stream = updateClient.OpenRead("http://www.personaguild.com/publicRiftLogs/version.ini");
-            StreamReader sr = new StreamReader(stream);
-            Int16 newVersion = Convert.ToInt16(sr.ReadToEnd());
-            stream.Close();
-            if (newVersion > version)
+            try
             {
-                Process process = new Process();
-                process.StartInfo.FileName = Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe");
-                process.Start();
+                WebClient updateClient = new WebClient();
+                Stream stream = updateClient.OpenRead("http://www.personaguild.com/publicRiftLogs/version.ini");
+                StreamReader sr = new StreamReader(stream);
+                Int16 newVersion = Convert.ToInt16(sr.ReadToEnd());
+                stream.Close();
+                if (newVersion > version)
+                {
+                    Process process = new Process();
+                    process.StartInfo.FileName = Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe");
+                    process.Start();
+                    Application.Exit();
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Rift Meters Client requires an internet connection. Connect to the internet,\n\t\t     then restart the program.", "Internet connection failed");
                 Application.Exit();
             }
 
