@@ -101,7 +101,9 @@ namespace RiftLogsUpdater
                 File.Delete(Path.Combine(Application.StartupPath, "LogParser.exe"));
             }
             File.Move(Path.Combine(Application.StartupPath + "\\update", "LogParser.exe"), Path.Combine(Application.StartupPath, "LogParser.exe"));
-
+            File.Move(Path.Combine(Application.StartupPath, "ICSharpCode.SharpZipLib.dll"), Path.Combine(Application.StartupPath, "old-zip.dll"));
+            File.Move(Path.Combine(Application.StartupPath + "\\update", "ICSharpCode.SharpZipLib.dll"), Path.Combine(Application.StartupPath, "ICSharpCode.SharpZipLib.dll"));
+            File.Move(Path.Combine(Application.StartupPath + "\\update", "RiftLogsUpdater.exe"), Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe.new"));    
 
             // Clean up
             Directory.Delete(Application.StartupPath + "\\update", true);

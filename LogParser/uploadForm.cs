@@ -27,7 +27,7 @@ namespace LogParser
         #region Variables
 
         // Version
-        Int16 version = 10002;
+        String version = "10003";
 
         // Upload success
         Boolean done = false;
@@ -87,7 +87,7 @@ namespace LogParser
         // Bosses
         String[] GSBbosses= {"Duke Letareus", "Infiltrator Johlen", "Oracle Aleria", "Prince Hylas", "Lord Greenscale"};
         String[] ROSbosses= {"Dark Focus", "Warmaster Galenir", "Plutonus the Immortal", "Herald Gaurath", "Alsbeth the Discordant"};
-        String[] GPbosses= {"Anrak The Foul", "Guurloth", "Thalguur", "Uruluuk"};
+        String[] GPbosses= {"Anrak the Foul", "Guurloth", "Thalguur", "Uruluuk"};
         String[] HKbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim", "Rune King Molinar", "Prince Dollin", "Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Lord Jornaru", "Akylios"};
         String[] DHbosses = {"Assault Commander Jorb", "Joloral Ragetide", "Isskal", "High Priestess Hydriss"};
 
@@ -100,16 +100,29 @@ namespace LogParser
             try
             {
                 WebClient updateClient = new WebClient();
+                updateClient.Proxy = null;
                 Stream stream = updateClient.OpenRead("http://www.personaguild.com/publicRiftLogs/version.ini");
                 StreamReader sr = new StreamReader(stream);
-                Int16 newVersion = Convert.ToInt16(sr.ReadToEnd());
+                String newVersion = sr.ReadToEnd();
                 stream.Close();
-                if (newVersion > version)
+                if (newVersion != version)
                 {
                     Process process = new Process();
                     process.StartInfo.FileName = Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe");
                     process.Start();
                     Application.Exit();
+                }
+                if (File.Exists(Path.Combine(Application.StartupPath, "old-zip.dll")))
+                {
+                    File.Delete(Path.Combine(Application.StartupPath, "old-zip.dll"));
+                }
+                if (File.Exists(Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe.new")))
+                {
+                    if (File.Exists(Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe")))
+                    {
+                        File.Delete(Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe"));
+                    }
+                    File.Move(Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe.new"), Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe"));
                 }
             }
             catch
