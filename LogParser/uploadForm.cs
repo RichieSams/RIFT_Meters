@@ -27,7 +27,7 @@ namespace LogParser
         #region Variables
 
         // Version
-        Int16 version = 10001;
+        Int16 version = 10002;
 
         // Upload success
         Boolean done = false;
