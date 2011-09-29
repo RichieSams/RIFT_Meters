@@ -27,7 +27,7 @@ namespace LogParser
         #region Variables
 
         // Version
-        String version = "10003";
+        Int16 version = 10003;
 
         // Upload success
         Boolean done = false;
@@ -103,9 +103,9 @@ namespace LogParser
                 updateClient.Proxy = null;
                 Stream stream = updateClient.OpenRead("http://www.personaguild.com/publicRiftLogs/version.ini");
                 StreamReader sr = new StreamReader(stream);
-                String newVersion = sr.ReadToEnd();
+                Int16 newVersion = Convert.ToInt16(sr.ReadToEnd());
                 stream.Close();
-                if (newVersion != version)
+                if (newVersion > version)
                 {
                     Process process = new Process();
                     process.StartInfo.FileName = Path.Combine(Application.StartupPath, "RiftLogsUpdater.exe");
@@ -134,6 +134,8 @@ namespace LogParser
             txt_month.Text = DateTime.Today.Month.ToString();
             txt_day.Text = DateTime.Today.Day.ToString();
             txt_year.Text = DateTime.Today.Year.ToString();
+
+            Client.Proxy = null;
         }
 
         #endregion // On load
