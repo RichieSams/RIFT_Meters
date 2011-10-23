@@ -27,7 +27,7 @@ namespace LogParser
         #region Variables
 
         // Version
-        Int16 version = 10003;
+        Int16 version = 10004;
 
         // Upload success
         Boolean done = false;
@@ -52,14 +52,8 @@ namespace LogParser
         struct entityDef {
             public string id;
             public string name;
-            public string startTime;
-            public string endTime;
-            public string raidNum;
         }
         Dictionary<string, entityDef> entityDict;
-
-        // Encounter Dictionary
-        Dictionary<int, entityDef> encDict;
 
         // Raid Dictionary
         struct raidDef
@@ -91,6 +85,9 @@ namespace LogParser
         String[] HKbosses= {"Murdantix", "Soulrender Zilas", "Vladmal Prime", "Grugonim", "Rune King Molinar", "Prince Dollin", "Estrode", "Matron Zamira", "Sicaron", "Inquistor Garau", "Inwar Darktide", "Lord Jornaru", "Akylios"};
         String[] DHbosses = {"Assault Commander Jorb", "Joloral Ragetide", "Isskal", "High Priestess Hydriss"};
 
+        // Timers
+        Stopwatch parseTimer = new Stopwatch();
+
         #endregion // Variables
 
         #region On load
@@ -101,7 +98,7 @@ namespace LogParser
             {
                 WebClient updateClient = new WebClient();
                 updateClient.Proxy = null;
-                Stream stream = updateClient.OpenRead("http://www.personaguild.com/publicRiftLogs/version.ini");
+                Stream stream = updateClient.OpenRead("http://www.riftmeters.com/version.ini");
                 StreamReader sr = new StreamReader(stream);
                 Int16 newVersion = Convert.ToInt16(sr.ReadToEnd());
                 stream.Close();
@@ -175,7 +172,7 @@ namespace LogParser
             // Call php
             try
             {
-                result = Client.UploadValues("http://personaguild.com/publicRiftLogs/login.php", nvcLoginInfo);
+                result = Client.UploadValues("http://www.riftmeters.com/login.php", nvcLoginInfo);
                 k = Encoding.UTF8.GetString(result, 0, result.Length);
 
                 // Check echos
@@ -311,9 +308,11 @@ namespace LogParser
 
         #region Work
 
-        private String getID(UInt64 origID, UInt64 ownerID, string name)
+        private String getID(String strOrigID, String strOwnerID, string name)
         {
-            string key = null;
+            UInt64 origID = UInt64.Parse(strOrigID);
+            UInt64 ownerID = UInt64.Parse(strOwnerID);
+            string key = String.Empty;
             if (ownerID == 0)
                 key = origID.ToString();
             else
@@ -321,7 +320,7 @@ namespace LogParser
             // Return null if the id is originally zero
             if (origID == 0)
             {
-                return "\\N";
+                return String.Empty;
             }
             else
             {
@@ -369,62 +368,10 @@ namespace LogParser
             }
         }
 
-        /*private String getID(UInt64 origID, UInt64 ownerID, string name)
-        {
-            string key = ownerID.ToString() + name;
-            // Return null if the id is originally zero
-            if (origID == 0)
-            {
-                return "\\N";
-            }
-            else
-            {
-                // Check if it is a pet
-                if (ownerID == 0)
-                {
-                    // Check if it is a npc or a player
-                    if (origID > 8000000000000000000)
-                    {
-                        if (!(ids.ContainsKey(origID)))
-                        {
-                            ids.Add(origID, npcID++);
-                        }
-                        return ids[origID].ToString();
-                    }
-                    else
-                    {
-                        if (!(ids.ContainsKey(origID)))
-                        {
-                            ids.Add(origID, playerID++);
-                        }
-                        return ids[origID].ToString();
-                    }
-                }
-                else
-                {
-                    // Check if it is a npc or a player
-                    if (ownerID > 8000000000000000000)
-                    {
-                        if (!(ids.ContainsKey(origID)))
-                        {
-                            ids.Add(origID, npcPetID++);
-                        }
-                        return ids[origID].ToString();
-                    }
-                    else
-                    {
-                        if (!(ids.ContainsKey(origID)))
-                        {
-                            ids.Add(origID, playerPetID++);
-                        }
-                        return ids[origID].ToString();
-                    }
-                }
-            }
-        }*/
-
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+            parseTimer.Start();
+
             #region Parsing
 
             double progress = 0;
@@ -433,7 +380,6 @@ namespace LogParser
 
             spellDict = new Dictionary<string, string>();
             entityDict = new Dictionary<string, entityDef>();
-            encDict = new Dictionary<int, entityDef>();
             ids = new Dictionary<string, UInt16>();
             raidDict = new Dictionary<int, raidDef>();
 
@@ -452,35 +398,30 @@ namespace LogParser
                 String startTime = null;
                 DateTime startDateTime = new DateTime();
 
-                // Create encounter variables
-                ArrayList encArray = new ArrayList();
-                int encNum = 1;
-                entityDef encNpc = new entityDef();
-                Dictionary<ulong, lastNPCTime> NPCList = new Dictionary<ulong, lastNPCTime>();
-
                 String line = string.Empty;
                 int lineCounter = 0;
+
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineCounter++;
                     
                     // Initiate the data containers
-                    String SourceID = "\\N";
-                    String SourceName = "\\N";
-                    String TargetID = "\\N";
-                    String TargetName = "\\N";
-                    String SourceOwnerID = "\\N";
-                    String TargetOwnerID = "\\N";
-                    String Amount = "\\N";
-                    String TypeID = "\\N";
-                    String SpellID = "\\N";
-                    String SpellName = "\\N";
-                    String Time = "\\N";
-                    String Element = "\\N";
-                    String BlockedValue = "\\N";
-                    String OverkillValue = "\\N";
-                    String OverhealValue = "\\N";
-                    String AbsorbedValue = "\\N";
+                    String SourceID = String.Empty;
+                    String SourceName = String.Empty;
+                    String TargetID = String.Empty;
+                    String TargetName = String.Empty;
+                    String SourceOwnerID = String.Empty;
+                    String TargetOwnerID = String.Empty;
+                    String Amount = String.Empty;
+                    String TypeID = String.Empty;
+                    String SpellID = String.Empty;
+                    String SpellName = String.Empty;
+                    String Time = String.Empty;
+                    String Element = String.Empty;
+                    String BlockedValue = String.Empty;
+                    String OverkillValue = String.Empty;
+                    String OverhealValue = String.Empty;
+                    String AbsorbedValue = String.Empty;
 
                     if (line != "")
                     {
@@ -508,18 +449,8 @@ namespace LogParser
                         }
 
                         // Only parse relevant combat lines
-                        if (((int.Parse(CodeList[0]) >= 1) && (int.Parse(CodeList[0]) <= 23)) || ((int.Parse(CodeList[0]) >= 26) && (int.Parse(CodeList[0]) <= 28)))
+                        if (((Int16.Parse(CodeList[0]) >= 1) && (Int16.Parse(CodeList[0]) <= 23)) || ((Int16.Parse(CodeList[0]) >= 26) && (Int16.Parse(CodeList[0]) <= 28)))
                         {
-                            // Set ID's
-
-                            TypeID = CodeList[0];
-                            UInt64 IntSourceID = Convert.ToUInt64(CodeList[1].Split('#')[2]);
-                            UInt64 IntTargetID = Convert.ToUInt64(CodeList[2].Split('#')[2]);
-                            UInt64 IntSourceOwnerID = Convert.ToUInt64(CodeList[3].Split('#')[2]);
-                            UInt64 IntTargetOwnerID = Convert.ToUInt64(CodeList[4].Split('#')[2]);
-
-                            bool removedNPC = false;
-
                             // Set names
                             string s;
                             SourceName = CodeList[5];
@@ -527,8 +458,19 @@ namespace LogParser
                             {
                                 TargetName = s;
                             }
+
+                            // Set ID's
+                            TypeID = CodeList[0];
+                            // Generate new IDs
+                            SourceID = getID(CodeList[1].Split('#')[2], CodeList[3].Split('#')[2], SourceName);
+                            TargetID = getID(CodeList[2].Split('#')[2], CodeList[4].Split('#')[2], TargetName);
+                            SourceOwnerID = getID(CodeList[3].Split('#')[2], "0", "");
+                            TargetOwnerID = getID(CodeList[4].Split('#')[2], "0", "");
+
+                            // Set Amount
                             if (((int.Parse(CodeList[0]) >= 3) && (int.Parse(CodeList[0]) <= 5)) || (int.Parse(CodeList[0]) == 14) || (int.Parse(CodeList[0]) == 23) || ((int.Parse(CodeList[0]) >= 27) && (int.Parse(CodeList[0]) <= 28)))
                                 Amount = CodeList[7];
+                            // Set spell ID
                             if (!((s = CodeList[8]).Equals("0")))
                             {
                                 SpellID = s;
@@ -547,32 +489,26 @@ namespace LogParser
                                 Element = g[1].Captures[0].Value;
                             }
 
-                            // Generate new IDs
-                            SourceID = getID(IntSourceID, IntSourceOwnerID, SourceName);
-                            TargetID = getID(IntTargetID, IntTargetOwnerID, TargetName);
-                            SourceOwnerID = getID(IntSourceOwnerID, 0, "");
-                            TargetOwnerID = getID(IntTargetOwnerID, 0, "");
-
                             // Generate Entity
                             if (!entityDict.ContainsKey(SourceID))
                             {
                                 entityDef ent = new entityDef();
-                                if (!SourceOwnerID.Equals("\\N"))
+                                if (!SourceOwnerID.Equals(String.Empty))
                                     ent.id = SourceOwnerID;
                                 else
-                                    ent.id = null;
+                                    ent.id = String.Empty;
                                 ent.name = SourceName;
                                 entityDict.Add(SourceID, ent);
                             }
-                            if (!TargetID.Equals("\\N"))
+                            if (!TargetID.Equals(String.Empty))
                             {
                                 if (!entityDict.ContainsKey(TargetID))
                                 {
                                     entityDef ent = new entityDef();
-                                    if (!TargetOwnerID.Equals("\\N"))
+                                    if (!TargetOwnerID.Equals(String.Empty))
                                         ent.id = TargetOwnerID;
                                     else
-                                        ent.id = null;
+                                        ent.id = String.Empty;
                                     ent.name = TargetName;
                                     entityDict.Add(TargetID, ent);
                                 }
@@ -606,257 +542,117 @@ namespace LogParser
                                 }
                             }
 
-                            // Date Correction if it starts before midnight and goes after midnight
-                            DateTime logTime = DateTime.Parse(Time);
-                            if (startDateTime.CompareTo(logTime) > 0)
-                                logTime = logTime.AddDays(1);
-
-                            // Need to start the encounter at the first occurance of that NPC
-                            ulong sID = Convert.ToUInt64(SourceID);
-                            ulong tID = (TargetID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetID));
-                            ulong sOwnerID = (SourceOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(SourceOwnerID));
-                            ulong tOwnerID = (TargetOwnerID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetOwnerID));
-                            ulong NPCID = 0;
-                            entityDef npc = new entityDef();
-
-                            // Source is a enemy NPC targetting a friendly
-                            if (sID >= 5001 && sID <= 12000)
+                            raidDef tempRaid = new raidDef();
+                            // Check for raid bosses to determine what instance
+                            if (GSBbosses.Contains(SourceName) || GSBbosses.Contains(TargetName))
                             {
-                                if (tID >= 1 && tID <= 5000)
+                                if (raidID!=1)
                                 {
-                                    // Ignore rez spells because they currently count as an npc
-                                    if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
+                                    if (raidID == 0)
                                     {
-                                        NPCID = sID;
-                                        npc.name = SourceName;
-                                        npc.id = NPCID.ToString();
-                                        npc.startTime = Time;
+                                        raidID = 1;
+                                        tempRaid.id = "1";
+                                        tempRaid.time = startTime;
+                                        raidDict.Add(raidNum, tempRaid);
+                                    }
+                                    else
+                                    {
+                                        raidNum++;
+                                        raidID = 1;
+                                        tempRaid.id = "1";
+                                        tempRaid.time = Time;
+                                        raidDict.Add(raidNum, tempRaid);
                                     }
                                 }
-                            }
-                            // Target is a enemy NPC from a friendly source
-                            else if (tID >= 5001 && tID <= 12000)
-                            {
-                                if (sID >= 1 && sID <= 5000)
-                                {
-                                    // Ignore rez spells because they currently count as an npc
-                                    if (/*Life's Grace*/(SpellID != "1799698788") && /*Breath of Life*/(SpellID != "71") && /*Flames of the Pheonix*/(SpellID != "1468443806") && /*Well of Life*/(SpellID != "1720780136") && /*Verse of Rebirth*/(SpellID != "159231530") && /*Seed of Life*/(SpellID != "699275055") && /*Life's Return*/(SpellID != "646325348") && /*Absolution*/(SpellID != "1297021479") && /*Soul Tether*/(SpellID != "1256404592") && /*Spark of Life*/(SpellID != "759111971"))
-                                    {
-                                        NPCID = tID;
-                                        npc.name = TargetName;
-                                        npc.id = NPCID.ToString();
-                                        npc.startTime = Time;
-                                    }
-                                }
-                            }
-                            int index = 0;
-                            // Store name of the first npc in the encounter
-                            if ((NPCID > 0) && (NPCList.Count == 0))
-                            {
-                                encNpc = npc;
-                            }
-
-                            // Store Line
-                            if (NPCID > 0 || NPCList.Count > 0)
-                                index = encArray.Add(Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
-                            // Add or update NPC List
-                            if (NPCID > 0)
-                            {
-                                raidDef tempRaid = new raidDef();
-                                // Check for raid bosses to determine what instance
-                                if (GSBbosses.Contains(npc.name))
-                                {
-                                    if (raidID!=1)
-                                    {
-                                        if (raidID == 0)
-                                        {
-                                            raidID = 1;
-                                            tempRaid.id = "1";
-                                            tempRaid.time = startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
-                                        else
-                                        {
-                                            raidNum++;
-                                            raidID = 1;
-                                            tempRaid.id = "1";
-                                            tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
-                                    }
                                     
-                                }
-                                else if (ROSbosses.Contains(npc.name))
+                            }
+                            else if (ROSbosses.Contains(SourceName) || ROSbosses.Contains(TargetName))
+                            {
+                                if (raidID != 2)
                                 {
-                                    if (raidID != 2)
+                                    if (raidID == 0)
                                     {
-                                        if (raidID == 0)
-                                        {
-                                            raidID = 2;
-                                            tempRaid.id = "2";
-                                            tempRaid.time = startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
-                                        else
-                                        {
-                                            raidNum++;
-                                            raidID = 2;
-                                            tempRaid.id = "2";
-                                            tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
+                                        raidID = 2;
+                                        tempRaid.id = "2";
+                                        tempRaid.time = startTime;
+                                        raidDict.Add(raidNum, tempRaid);
+                                    }
+                                    else
+                                    {
+                                        raidNum++;
+                                        raidID = 2;
+                                        tempRaid.id = "2";
+                                        tempRaid.time = Time;
+                                        raidDict.Add(raidNum, tempRaid);
                                     }
                                 }
-                                else if (GPbosses.Contains(npc.name))
+                            }
+                            else if (GPbosses.Contains(SourceName) || GPbosses.Contains(TargetName))
+                            {
+                                if (raidID != 3)
                                 {
-                                    if (raidID != 3)
+                                    if (raidID == 0)
                                     {
-                                        if (raidID == 0)
-                                        {
-                                            raidID = 3;
-                                            tempRaid.id = "3";
-                                            tempRaid.time = startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
-                                        else
-                                        {
-                                            raidNum++;
-                                            raidID = 3;
-                                            tempRaid.id = "3";
-                                            tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
+                                        raidID = 3;
+                                        tempRaid.id = "3";
+                                        tempRaid.time = startTime;
+                                        raidDict.Add(raidNum, tempRaid);
+                                    }
+                                    else
+                                    {
+                                        raidNum++;
+                                        raidID = 3;
+                                        tempRaid.id = "3";
+                                        tempRaid.time = Time;
+                                        raidDict.Add(raidNum, tempRaid);
                                     }
                                 }
-                                else if (HKbosses.Contains(npc.name))
+                            }
+                            else if (HKbosses.Contains(SourceName) || HKbosses.Contains(TargetName))
+                            {
+                                if (raidID != 4)
                                 {
-                                    if (raidID != 4)
+                                    if (raidID == 0)
                                     {
-                                        if (raidID == 0)
-                                        {
-                                            raidID = 4;
-                                            tempRaid.id = "4";
-                                            tempRaid.time = startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
-                                        else
-                                        {
-                                            raidNum++;
-                                            raidID = 4;
-                                            tempRaid.id = "4";
-                                            tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
+                                        raidID = 4;
+                                        tempRaid.id = "4";
+                                        tempRaid.time = startTime;
+                                        raidDict.Add(raidNum, tempRaid);
+                                    }
+                                    else
+                                    {
+                                        raidNum++;
+                                        raidID = 4;
+                                        tempRaid.id = "4";
+                                        tempRaid.time = Time;
+                                        raidDict.Add(raidNum, tempRaid);
                                     }
                                 }
-                                else if (DHbosses.Contains(npc.name))
+                            }
+                            else if (DHbosses.Contains(SourceName) || DHbosses.Contains(TargetName))
+                            {
+                                if (raidID != 5)
                                 {
-                                    if (raidID != 5)
+                                    if (raidID == 0)
                                     {
-                                        if (raidID == 0)
-                                        {
-                                            raidID = 5;
-                                            tempRaid.id = "5";
-                                            tempRaid.time = startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
-                                        else
-                                        {
-                                            raidNum++;
-                                            raidID = 5;
-                                            tempRaid.id = "5";
-                                            tempRaid.time = encNpc.startTime;
-                                            raidDict.Add(raidNum, tempRaid);
-                                        }
+                                        raidID = 5;
+                                        tempRaid.id = "5";
+                                        tempRaid.time = startTime;
+                                        raidDict.Add(raidNum, tempRaid);
+                                    }
+                                    else
+                                    {
+                                        raidNum++;
+                                        raidID = 5;
+                                        tempRaid.id = "5";
+                                        tempRaid.time = Time;
+                                        raidDict.Add(raidNum, tempRaid);
                                     }
                                 }
+                            }
 
-                                // Update last known NPC time and index
-                                lastNPCTime lastNpc = new lastNPCTime(logTime, index);
-                                if (NPCList.ContainsKey(NPCID))
-                                    NPCList[NPCID] = lastNpc;
-                                // Add new last known NPC time and index
-                                else
-                                    NPCList.Add(NPCID, lastNpc);
-                            }
-                            int lastIndex = 0;
-                            /*// Remove NPCs were slain (Can sometimes slay themselves?)
-                            if (int.Parse(CodeList[0]) == 11) 
-                            {
-                                tID = (TargetID.Equals("\\N") ? 0 : Convert.ToUInt64(TargetID));
-                                if (NPCList.ContainsKey(tID))
-                                {
-                                    lastIndex = NPCList[tID].index;
-                                    NPCList.Remove(tID);
-                                    removedNPC = true;
-                                }
-                            }
-                            // Remove NPCs that died (Might already be slain?)
-                            if (int.Parse(CodeList[0]) == 12) 
-                            {
-                                if (NPCList.ContainsKey(sID))
-                                {
-                                    lastIndex = NPCList[sID].index;
-                                    NPCList.Remove(sID);
-                                    removedNPC = true;
-                                }
-                            }*/
-                            if (NPCList.Count > 0)
-                            {
-                                // Remove NPCs that died or havent been heard from in a while
-                                DateTime aWhileAgo = logTime.AddSeconds(-20);
-                                List<ulong> toRemove = new List<ulong>();
-                                foreach (KeyValuePair<ulong, lastNPCTime> entry in NPCList)
-                                {
-                                    if (entry.Value.time.CompareTo(aWhileAgo) < 0)
-                                    {
-                                        // Last action was a while ago
-                                        toRemove.Add(entry.Key);
-                                        if (lastIndex < entry.Value.index)
-                                            lastIndex = entry.Value.index;
-                                    }
-                                }
-                                // Remove from NPCList
-                                foreach (ulong key in toRemove) {
-                                    NPCList.Remove(key);
-                                    removedNPC = true;
-                                }
-                            }
-                            
-                            // If no more NPCs then encounter over
-                            if (NPCList.Count == 0 && removedNPC)
-                            {
-                                string endTime = null;
-                                // Print all rows part of the encounter
-                                while (lastIndex > 0)
-                                {
-                                    dataWriter.WriteLine(raidNum.ToString() + ">" + encArray[0] + encNum.ToString() + ",");
-                                    encArray.RemoveAt(0);
-                                    endTime = ((string)encArray[0]).Substring(0, 8);
-                                    lastIndex--;
-                                }
-                                encNpc.endTime = endTime;
-                                // Print extra rows that got caught up
-                                lastIndex = encArray.Count;
-                                while (lastIndex > 0)
-                                {
-                                    dataWriter.WriteLine(raidNum.ToString() + ">" + encArray[0] + "0,");
-                                    encArray.RemoveAt(0);
-                                    lastIndex--;
-                                }
-                                // Add encounter to encounter Dictionary
-                                if (endTime != null)
-                                {
-                                    encNpc.raidNum = raidNum.ToString();
-                                    encDict.Add(encNum, encNpc);
-                                    encNum++;
-                                }
-                            }
-                            else if (NPCList.Count == 0 && !removedNPC)
-                            {
-                                // Write the data to the csv file
-                                dataWriter.WriteLine(raidNum.ToString() + ">" + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
-                            }
+                            // Write the data to the csv file
+                            dataWriter.WriteLine(raidNum.ToString() + ">" + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
 
                         }
                     }
@@ -918,8 +714,8 @@ namespace LogParser
 
                 foreach (KeyValuePair<string, entityDef> kvp in entityDict)
                 {
-                    string owner = "\\N";
-                    if (kvp.Value.id != null) owner = kvp.Value.id;
+                    string owner = String.Empty;
+                    if (kvp.Value.id != String.Empty) owner = kvp.Value.id;
                     entityWriter.WriteLine(kvp.Key + "," + owner + "," + kvp.Value.name + ",");
                 }
 
@@ -930,30 +726,13 @@ namespace LogParser
 
             }
 
-            try
-            {
-                TextWriter encWriter = new StreamWriter("encounter.csv");
-
-                foreach (KeyValuePair<int, entityDef> kvp in encDict)
-                {
-                    encWriter.WriteLine(kvp.Value.raidNum + ">" + kvp.Key + "," + kvp.Value.id + "," + kvp.Value.name + "," + kvp.Value.startTime + "," + kvp.Value.endTime + ",");
-                }
-
-                encWriter.Close();
-            }
-            catch (IOException)
-            {
-
-            }
+            parseTimer.Stop();
+            MessageBox.Show(parseTimer.ElapsedMilliseconds.ToString());
 
             // Update progress
             uploadBackgroundWorker.ReportProgress(33);
 
             #endregion // Parsing region
-
-
-
-
 
             #region Compression
 
@@ -962,7 +741,7 @@ namespace LogParser
             zipStream.SetLevel(9); //0-9, 9 being the highest level of compression
             //zipStream.Password = "ok";
 
-            string[] files = { @"data.csv", @"spell.csv", @"entity.csv", @"encounter.csv", @"definitions.txt"};
+            string[] files = { @"data.csv", @"spell.csv", @"entity.csv", @"definitions.txt"};
             foreach (string inputFn in files)
             {
                 FileInfo fi = new FileInfo(inputFn);
@@ -984,8 +763,6 @@ namespace LogParser
             zipStream.Close();
 
             #endregion // Compression
-
-
 
             #region MD5Hash
 
@@ -1010,11 +787,11 @@ namespace LogParser
 
             progress = 0;
             // Create ftp object
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.personaguild.com/"+md5hash+".zip");
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.riftmeters.com/"+md5hash+".zip");
             request.Method = WebRequestMethods.Ftp.UploadFile;
 
             // Input credentials
-            request.Credentials = new NetworkCredential(Properties.Settings.Default.FTPAccount, Properties.Settings.Default.FTPPassword); // Need to change this to make it secure
+            request.Credentials = new NetworkCredential("riftmeters@riftmeters.com", "[F_8bgoL0oth#HRsI2"); // Need to change this to make it secure
 
             // Set paramaters
             request.UsePassive = true;
@@ -1051,14 +828,13 @@ namespace LogParser
             ftpstream.Close();
 
             #endregion // FTP Upload
-
             
             NameValueCollection nvcDecompress = new NameValueCollection();
             nvcDecompress.Add("file", md5hash);
 
             #region Check File Integrity
 
-            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/check.php", nvcDecompress);
+            result = Client.UploadValues("http://www.riftmeters.com/check.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
 
             // File was corrupted during upload
@@ -1072,10 +848,10 @@ namespace LogParser
 
             #region FileHandler
 
-            result = Client.UploadValues("http://personaguild.com/publicRiftLogs/fileHandler.php", nvcDecompress);
+            result = Client.UploadValues("http://www.riftmeters.com/fileHandler.php", nvcDecompress);
             k = Encoding.UTF8.GetString(result, 0, result.Length);
 
-            if (k != "SUCCESS")
+            if (k != " SUCCESS")
             {
                 MessageBox.Show("Data insertion failed. Retry upload. If problem persists, contact an administrator", "Data insertion failed");
                 return;
@@ -1106,7 +882,6 @@ namespace LogParser
             if (e.ProgressPercentage != uploadProgress.Value)
             {
                 uploadProgress.Value = e.ProgressPercentage;
-
                 if (e.ProgressPercentage < 33)
                 {
                     lbl_statusTxt.Text = "Parsing combat log - " + e.ProgressPercentage*3 + "%";
@@ -1117,7 +892,7 @@ namespace LogParser
                 }
                 else if (e.ProgressPercentage < 99)
                 {
-                    lbl_statusTxt.Text = "Uploading data - " + (e.ProgressPercentage - 66) * 3 + "% (This can take some time)";
+                    lbl_statusTxt.Text = "Uploading data - " + (e.ProgressPercentage - 66) * 3 + "%";
                 }
                 else
                 {
@@ -1135,7 +910,6 @@ namespace LogParser
             }
             // Delete files
             File.Delete(Application.StartupPath + "\\data.csv");
-            File.Delete(Application.StartupPath + "\\encounter.csv");
             File.Delete(Application.StartupPath + "\\entity.csv");
             File.Delete(Application.StartupPath + "\\spell.csv");
             File.Delete(Application.StartupPath + "\\definitions.txt");
