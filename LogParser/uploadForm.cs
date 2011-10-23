@@ -652,7 +652,7 @@ namespace LogParser
                             }
 
                             // Write the data to the csv file
-                            dataWriter.WriteLine(raidNum.ToString() + ">" + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",0,");
+                            dataWriter.WriteLine(raidNum.ToString() + ">" + Time + "," + TypeID + "," + SourceID + "," + TargetID + "," + SpellID + "," + Amount + "," + Element + "," + AbsorbedValue + "," + BlockedValue + "," + OverhealValue + "," + OverkillValue + ",");
 
                         }
                     }
