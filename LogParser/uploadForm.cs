@@ -14,6 +14,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using System.Security.Cryptography;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace LogParser
 {
@@ -65,6 +66,9 @@ namespace LogParser
 
         // Login
         Boolean loggedIn = false;
+
+        // Creates a TextInfo based on the "en-US" culture.
+        TextInfo usTxtInfo = new CultureInfo("en-US", false).TextInfo;
 
         // WebClient
         CookieAwareWebClient Client = new CookieAwareWebClient();
@@ -148,15 +152,15 @@ namespace LogParser
             txt_pass.Text = "";
 
             // Hashing of password for security
-            MD5 md5 = new MD5CryptoServiceProvider();
-            byte[] interHash = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + username));
+            SHA256 sha = new SHA256CryptoServiceProvider();
+            byte[] interHash = sha.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + username));
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < interHash.Length; i++)
             {
                 sb.Append(interHash[i].ToString("x2"));
             }
             string interStr = sb.ToString();
-            byte[] finalHash = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + interStr));
+            byte[] finalHash = sha.ComputeHash(System.Text.Encoding.Default.GetBytes(pass + interStr));
             sb.Clear();
             for (int i = 0; i < finalHash.Length; i++)
             {
@@ -181,7 +185,7 @@ namespace LogParser
                 {
                     case "true":
                         loggedIn = true;
-                        lbl_loggedIn.Text = "Logged in as " + username;
+                        lbl_loggedIn.Text = "Logged in as " + usTxtInfo.ToTitleCase(username);
                         lbl_loggedIn.ForeColor = Color.Green;
                         txt_fileDir.Focus();
                         break;
@@ -370,6 +374,7 @@ namespace LogParser
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+            parseTimer.Reset();
             parseTimer.Start();
 
             #region Parsing
@@ -727,7 +732,7 @@ namespace LogParser
             }
 
             parseTimer.Stop();
-            MessageBox.Show(parseTimer.ElapsedMilliseconds.ToString());
+            //MessageBox.Show(parseTimer.ElapsedMilliseconds.ToString());
 
             // Update progress
             uploadBackgroundWorker.ReportProgress(33);
